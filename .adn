@@ -1,0 +1,12 @@
+module.exports = {
+    "toRoot": ".",
+    "name": "nextsteps-sailsjs",
+    "defaults": {
+        "adapter": "mysql",
+        "label-host": "localhost",
+        "label-port": "8889",
+        "label-user": "root",
+        "label-pass": "root",
+        "label-db": "develop"
+    }
+}
