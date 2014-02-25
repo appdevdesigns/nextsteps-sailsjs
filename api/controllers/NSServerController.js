@@ -36,14 +36,24 @@ module.exports = {
    *    `/nsserver/auth`
    */
    auth: function (req, res) {
+       // Send a JSON response
+       return res.json({
+           status: 'success'
+         });
+  },
+
+
+  /**
+   * Action blueprints:
+   *    `/nsserver/sync`
+   */
+   sync: function (req, res) {
     
     // Send a JSON response
     return res.json({
       status: 'success'
     });
   },
-
-
 
 
   /**
