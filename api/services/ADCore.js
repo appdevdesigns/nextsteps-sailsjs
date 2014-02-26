@@ -22,10 +22,14 @@ module.exports = {
             }
 
         },
-        
-        
+
+
         getAuth: function(req) {
-            return req.session.appdev.auth.guid;
+            if (req.session.appdev) {
+                return req.session.appdev.auth.guid;
+            } else {
+                return null;
+            }
         },
 
 
