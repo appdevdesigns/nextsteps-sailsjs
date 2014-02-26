@@ -1,5 +1,5 @@
 /**
- * ADCore
+ * NSServerSync
  *
  * @module      :: Service
  * @description :: This is handles the sync service for NextSteps Server
@@ -8,6 +8,7 @@
  */
 var $ = require('jquery');
 var GMA = require('gma-api');
+var ADCore = require('./ADCore.js');
 
 var syncFormat = {
     lastSyncTimestamp:1,
@@ -21,11 +22,15 @@ var syncFormat = {
 var paramsCorrect = function( req, format) {
 
     var correct = true;
-    for (var f in format) {
-        if (typeof req.param(f) == 'undefined') {
-            correct = false;
-            break;
-        }
+    if (typeof req.param('test') != 'undefined') {
+        ADCore.auth.markAuthenticated(req, 'GUID1');
+    } else {
+      for (var f in format) {
+          if (typeof req.param(f) == 'undefined') {
+              correct = false;
+              break;
+          }
+      }
     }
     return correct;
 }
@@ -53,7 +58,7 @@ module.exports = {
           
           
           $.when(validationDone, setupDone)
-          .then(function(userData, gma){
+          .then(function(uuid, gma){
     console.log('validation and setup done...');
 
               // getAssignments
@@ -67,21 +72,35 @@ module.exports = {
               .then(function(){
     console.log('assignments and measurements done ...');             
                   
-                  dfd.resolve({
-                      "lastSyncTimestamp": 1234567890,
-                      "transactionLog": [{
-                          "operation": "create",
-                          "model:": "Campus",
-                          "multilingual": false,
-                          "params": {
-                              "uuid": "01234567890abcdef",
-                              "language_code": "en",
-                              "name": "UAH"
-                          }
-                      }]
-                    });
-                  
-                  
+    
+                  // Get transactions to send
+                  var lastSyncTimestamp = req.param('lastSyncTimestamp');
+                  getTransactionsForUser(uuid, lastSyncTimestamp)
+                  .done(function (logToSend){
+                      var transactionLog = req.param('transactionLog');
+                      applyTransactionsFromUser(uuid, transactionLog)
+                      .done(function(timestamp) {
+                          dfd.resolve({
+                              "lastSyncTimestamp": timestamp,
+                              "transactionLog": [{
+                                  "operation": "create",
+                                  "model:": "Campus",
+                                  "multilingual": false,
+                                  "params": {
+                                      "uuid": "01234567890abcdef",
+                                      "language_code": "en",
+                                      "name": "UAH"
+                                  }
+                              }]
+                            });
+                      })
+                      .fail(function(err){
+                          dfd.reject(err);
+                      });
+                  })
+                  .fail(function(err){
+                      dfd.reject(err);
+                  });
               })
               .fail(function(err){
                   dfd.reject(err);
@@ -111,8 +130,15 @@ var validateUser = function( guid ) {
     var dfd = $.Deferred();
     
     console.log('validating user ... ');
-    /// validate here:
-    dfd.resolve();
+    if (!guid) {
+        dfd.reject("Invalid GUID");
+    } else {
+        // is in User table?
+        // If not, generate UUID and insert
+        var uuid = ADCore.util.createUUID();
+        // create uuid, guid
+        dfd.resolve(uuid);
+    }
     
     return dfd;
 };
@@ -143,7 +169,7 @@ var getAssignments = function( gma ) {
                     -> TransactionLog [user_uuid, timestamp, ….]
                 
 
-    1.2. -> user_campus[user_uuid, campus_uuid], translog[user, time stamp, ….]
+    1.2. -> user_campus[user_uuid, campus_uuid]
         -> TransactionLog [user_uuid, timestamp, ….] 
      */
     dfd.resolve();
@@ -155,7 +181,7 @@ var getAssignments = function( gma ) {
 
 var getMeasurements = function( gma ) {
     var dfd = $.Deferred();
-    console.log('getting measuements ');
+    console.log('getting measurements ');
     /*
     2. gma.getMeasurement()
     Each and every measurement -> 
@@ -170,6 +196,32 @@ var getMeasurements = function( gma ) {
 
      */
     dfd.resolve();
+    
+    return dfd;
+};
+
+
+var getTransactionsForUser = function( userUuid, lastSync ) {
+    var dfd = $.Deferred();
+    console.log('getting transactions to send ');
+    /*
+    Filter transaction log by user and last update time
+
+     */
+    dfd.resolve("log");
+    
+    return dfd;
+};
+
+var applyTransactionsFromUser = function( userUuid, log ) {
+    var dfd = $.Deferred();
+    console.log('applying transactions from user ');
+    /*
+    Apply changes from the user
+    Add each entry to the transaction log
+    Return the current sync time
+     */
+    dfd.resolve("syncTime = now");
     
     return dfd;
 };
