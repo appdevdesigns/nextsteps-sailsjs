@@ -22,7 +22,7 @@ module.exports = {
    * Action blueprints:
    *    `/nsserver/ping`
    */
-   ping: function (req, res) {
+  ping: function (req, res) {
     
     // Send a JSON response
     return res.json({
@@ -35,11 +35,11 @@ module.exports = {
    * Action blueprints:
    *    `/nsserver/auth`
    */
-   auth: function (req, res) {
-       // Send a JSON response
-       return res.json({
-           status: 'success'
-         });
+  auth: function (req, res) {
+    // Send a JSON response
+    return res.json({
+      status: 'success'
+    });
   },
 
 
@@ -47,11 +47,13 @@ module.exports = {
    * Action blueprints:
    *    `/nsserver/sync`
    */
-   sync: function (req, res) {
-    
-    // Send a JSON response
-    return res.json({
-      status: 'success'
+  sync: function (req, res) {
+    NSServerSync.synchronize(req, res)
+    .done(function(data) {
+      ADCore.comm.success(res, data);
+    })
+    .fail(function(err){
+      ADCore.comm.error(res, err);
     });
   },
 
