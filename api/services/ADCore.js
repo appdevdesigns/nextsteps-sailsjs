@@ -22,6 +22,11 @@ module.exports = {
             }
 
         },
+        
+        
+        getAuth: function(req) {
+            return req.session.appdev.auth.guid;
+        },
 
 
 
