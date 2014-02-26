@@ -39,8 +39,14 @@ module.exports.policies = {
     configData: ['isAuthenticated'],
     labelConfigFile:[ 'isAuthenticated' ],
     logout:true
-},
+}
 
+, NSServerController: {
+    ping: [],
+    auth: [],
+    sync:[ 'isAuthenticatedService' ],
+    logout:true
+},
 };
 
 
