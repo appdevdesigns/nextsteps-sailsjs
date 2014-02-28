@@ -38,89 +38,108 @@ var paramsCorrect = function( req, format) {
 
 module.exports = {
     synchronize: function (req, res) {
-      var dfd = $.Deferred();
-      if (!paramsCorrect(req, syncFormat) ) {
-          dfd.reject({status:"required param not defined"});
-      } else {
-          // read In given Data
-          var userID = req.param('username');
-          var password = req.param('password');
+        var dfd = $.Deferred();
+        if (!paramsCorrect(req, syncFormat) ) {
+            dfd.reject({status:"required param not defined"});
+        } else {
+            // read In given Data
+            var userID = req.param('username');
+            var password = req.param('password');
           
-          var guid = ADCore.auth.getAuth(req);
-          
-          
-          // validateUser
-          var validationDone = validateUser(guid);
-          
-          
-          // setupGMA
-          var setupDone = setupGMA(userID, password);
-          
-          
-          $.when(validationDone, setupDone)
-          .then(function(uuid, gma){
-    console.log('validation and setup done...');
-
-              // getAssignments
-              var assignmentsDone = getAssignments(gma);
-              
-              // getMeasurements
-              var measurementsDone = getMeasurements(gma);
-          
-              
-              $.when(assignmentsDone, measurementsDone)
-              .then(function(){
-    console.log('assignments and measurements done ...');             
-                  
-    
-                  // Get transactions to send
-                  var lastSyncTimestamp = req.param('lastSyncTimestamp');
-                  getTransactionsForUser(uuid, lastSyncTimestamp)
-                  .done(function (logToSend){
-                      var transactionLog = req.param('transactionLog');
-                      applyTransactionsFromUser(uuid, transactionLog)
-                      .done(function(timestamp) {
-                          dfd.resolve({
-                              "lastSyncTimestamp": timestamp,
-                              "transactionLog": [{
-                                  "operation": "create",
-                                  "model:": "Campus",
-                                  "multilingual": false,
-                                  "params": {
-                                      "uuid": "01234567890abcdef",
-                                      "language_code": "en",
-                                      "name": "UAH"
-                                  }
-                              }]
-                            });
-                      })
-                      .fail(function(err){
-                          dfd.reject(err);
-                      });
-                  })
-                  .fail(function(err){
-                      dfd.reject(err);
-                  });
-              })
-              .fail(function(err){
-                  dfd.reject(err);
-              });
-              
-              
-          })
-          .fail(function(err){
-             
-              // how to handle an error here?
-              dfd.reject(err);
-          });
-
-          
-          
-          
-          
+            var guid = ADCore.auth.getAuth(req);
+            var dfdReady = $.Deferred();
+            
+            
+            // validateUser
+            validateUser(guid)
+            .then(function(uuid){
+console.log('validation done...');
+                if (true || config.gma) {
+                    // setupGMA
+                    setupGMA(userID, password)
+                    .then(function(gma){
+console.log('GMA setup done...');
+                        // getAssignments
+                        var assignmentsDone = getAssignments(gma);
+                        
+                        // getMeasurements
+                        var measurementsDone = getMeasurements(gma);
+                    
+                        
+                        $.when(assignmentsDone, measurementsDone)
+                        .then(function(){
+console.log('GMA assignments and measurements done ...');
+                            dfdReady.resolve();
+                        })
+                        .fail(function(err){
+                            dfd.reject(err);
+                        });
+                        
+                        
+                    })
+                    .fail(function(err){
+                        dfd.reject(err);
+                    });
+                } else {
+                    // Nothing to do if no GMA
+                    dfdReady.resolve();
+                }
+                // Get transactions to send
+                var lastSyncTimestamp = req.param('lastSyncTimestamp');
+                getTransactionsForUser(uuid, lastSyncTimestamp)
+                .then(function (logToSend){
+                    var transactionLog = req.param('transactionLog');
+                    applyTransactionsFromUser(uuid, transactionLog)
+                    .then(function(timestamp) {
+                        dfd.resolve({
+                            "lastSyncTimestamp": timestamp,
+                            "transactionLog": [{
+                                "operation": "create",
+                                "model:": "Campus",
+                                "multilingual": false,
+                                "params": {
+                                    "uuid": "01234567890abcdef",
+                                    "language_code": "en",
+                                    "name": "UAH"
+                                }
+                            }]
+                          });
+                    })
+                    .fail(function(err){
+                        dfd.reject(err);
+                    });
+                })
+                .fail(function(err){
+                    dfd.reject(err);
+                });
+            })
+            .fail(function(err){
+                dfd.reject(err);
+            });
+            
+            $.when(dfdReady)
+            .then(function(){
+                
+            })
+            .fail(function(err){
+                dfd.reject(err);
+            });
       }
       
       return dfd;
+    },
+    
+    // These are for exposing private functions for testing only
+    test: {
+        validateUser: function( guid ) {
+            return validateUser(guid);
+        },
+        setupGMA: function( username, password ) {
+            return setupGMA( username, password );
+        },
+        getAssignments: function( gma ) {
+            return getAssignments( gma );
+        }
     }
 };
 
@@ -149,7 +168,10 @@ var setupGMA = function( username, password ) {
     var dfd = $.Deferred();
     console.log('setting up GMA .. ');
     /// setup here:
-    dfd.resolve();
+    var dummy = {
+        nodes: { 101: "Assign1", 120: "Assign2"}
+    };
+    dfd.resolve(dummy);
     
     return dfd;
 };
@@ -159,6 +181,39 @@ var setupGMA = function( username, password ) {
 var getAssignments = function( gma ) {
     var dfd = $.Deferred();
     console.log('getting assignments ');
+    
+    // assume all new
+    var numDone = 0;
+    var numToDo = 0;
+    for (var id in gma.nodes){
+        var createIt = function(gmaId, name) {
+            NSServerCampus.create({
+        
+                UUID: ADCore.util.createUUID(),
+                node_id: gmaId,
+            })
+            .then(function(campus){
+                campus.addTranslation({
+                    language_code: 'en',
+                    short_name: name
+                })
+                .then(function(){
+                    numDone++;
+                    if (numDone == numToDo){
+                        dfd.resolve();
+                    }
+                })
+                .fail(function(err){
+                    dfd.reject(err);
+                });
+            })
+            .fail(function(err){
+                dfd.reject(err);
+            });
+        };
+        createIt(id, gma.nodes[id]);
+        numToDo++;
+    }
     /*
     1.1 if Add
         insert CAMPUS[ UUID, nodeID ] 
@@ -172,7 +227,7 @@ var getAssignments = function( gma ) {
     1.2. -> user_campus[user_uuid, campus_uuid]
         -> TransactionLog [user_uuid, timestamp, ….] 
      */
-    dfd.resolve();
+//    dfd.resolve();
     
     return dfd;
 };
@@ -185,8 +240,7 @@ var getMeasurements = function( gma ) {
     /*
     2. gma.getMeasurement()
     Each and every measurement -> 
-        if Add -> Step[uuid, mid] -> stepTrans [lang, name,    description]
-            campusSteps[campus_uuid, step_uuid]
+        if new Add -> Step[uuid, mid] & stepTrans [lang, name,    description]
             -> for all users in user-campus with campus_uuid
                 -> TransactionLog [user_uuid, timestamp, ….]
         else

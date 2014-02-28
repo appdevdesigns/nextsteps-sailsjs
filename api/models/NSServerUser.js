@@ -23,9 +23,11 @@ module.exports = {
 
 
     campuses: function(filter, cb) {
-
+        dfd = $.Deferred();
         if (typeof cb == 'undefined') {
-            cb = filter;
+            if (typeof filter == 'function') {
+                cb = filter;
+            }
             filter = {};
         }
 
@@ -34,15 +36,26 @@ module.exports = {
         .then(function(listCampuses) {
             DBHelper.translateList(listCampuses, { language_code:true, name:true })
             .then(function(list) {
-                cb(null, listCampuses);
+                if (cb) {
+                    cb(null, listCampuses);
+                }
+                dfd.resolve(listCampuses);
             })
             .fail(function(err){
-                cb(err);
+                if (cb) {
+                    cb(err);
+                }
+                dfd.reject(err);
             });
         })
         .fail(function(err){
-            cb(err);
+            if (cb) {
+                cb(err);
+            }
+            dfd.reject(err);
         });
+        
+        return dfd;
  /*
         NextStepsUserCampus.find({user_UUID:this.UUID})
         .then(function(list){
@@ -89,7 +102,50 @@ module.exports = {
 */
 
 
+    },
+    
+    addCampus: function(campusObj, cb) {
+        var dfd = $.Deferred();
+        NSServerUserCampus.create({
+            campus_UUID: campusObj.UUID,
+            user_UUID: this.UUID
+        })
+        .then(function(obj){
+            if (cb) {
+                cb(null);
+            }
+            dfd.resolve();
+        })
+        .fail(function(err){
+            if (cb) {
+                cb(err);
+            }
+            dfd.reject(err);
+        });
+        return dfd;
+    },
+    
+    addTransaction: function(transaction, cb) {
+        var dfd = $.Deferred();
+        NSServerTransactionLog.create({
+            user_UUID: this.UUID,
+            transaction: transaction
+        })
+        .then(function(obj){
+            if (cb) {
+                cb(null);
+            }
+            dfd.resolve();
+        })
+        .fail(function(err){
+            if (cb) {
+                cb(err);
+            }
+            dfd.reject(err);
+        });
+        return dfd;
     }
+
   }
 
 };

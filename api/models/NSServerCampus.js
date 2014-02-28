@@ -21,6 +21,25 @@ module.exports = {
 
 
     node_id	: 'INTEGER',
+    
+    addTranslation: function(transEntry, cb) {
+        var dfd = $.Deferred();
+        transEntry.campus_id = this.id;
+        NSServerCampusTrans.create(transEntry)
+        .then(function(obj){
+            if (cb) {
+                cb(null);
+            }
+            dfd.resolve();
+        })
+        .fail(function(err){
+            if (cb) {
+                cb(err);
+            }
+            dfd.reject(err);
+        });
+        return dfd;
+    },
 
     trans:function(lang, cb) {
         // find the translations for this entry.
@@ -51,9 +70,12 @@ module.exports = {
 
 
     users: function(filter, cb) {
+        var dfd = $.Deferred();
 
         if (typeof cb == 'undefined') {
-            cb = filter;
+            if (typeof filter == 'function') {
+                cb = filter;
+            }
             filter = {};
         }
 
@@ -61,12 +83,18 @@ module.exports = {
 
         DBHelper.manyThrough(NSServerUserCampus, {campus_UUID:this.UUID}, NSServerUser, 'user_UUID', 'UUID', filter)
         .then(function(listUsers) {
-            cb(null, listUsers);
+            if (cb) {
+                cb(null, listUsers);
+            }
+            dfd.resolve(listUsers);
         })
         .fail(function(err){
-            cb(err);
+            if (cb) {
+                cb(err);
+            }
+            dfd.reject(err);
         });
-
+        return dfd;
     }
   }
 
