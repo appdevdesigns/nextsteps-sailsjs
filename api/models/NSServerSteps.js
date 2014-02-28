@@ -20,7 +20,7 @@ module.exports = {
          UUID	: 'STRING',
 
 
-         measurement_UUID	: 'STRING'
+         measurement_id	: 'STRING'
     }
 
 };
