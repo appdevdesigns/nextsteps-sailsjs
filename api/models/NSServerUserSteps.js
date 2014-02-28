@@ -21,6 +21,27 @@ module.exports = {
 
 
         step_UUID	: 'STRING'
-    }
+    },
+    
+    user: function(cb) {
+        dfd = $.Deferred();
+        NSServerUser.findOne({
+            UUID: this.user_UUID
+        })
+        .then(function(user) {
+            if (cb) {
+                cb(null, user);
+            }
+            dfd.resolve(user);
+        })
+        .fail(function(err){
+            if (cb) {
+                cb(err);
+            }
+            dfd.reject(err);
+        });
+        
+        return dfd;
+    },
 
 };
