@@ -50,43 +50,12 @@ module.exports = {
             var password = req.param('password');
 
             var guid = ADCore.auth.getAuth(req);
-            var dfdReady = $.Deferred();
 
 
             // validateUser
             validateUser(guid)
             .then(function(uuid){
 console.log('validation done...');
-                if (true || config.gma) {
-                    // setupGMA
-                    setupGMA(userID, password)
-                    .then(function(gma){
-console.log('GMA setup done...');
-                        // getAssignments
-                        var assignmentsDone = getAssignments(gma);
-
-                        // getMeasurements
-                        var measurementsDone = getMeasurements(gma);
-
-
-                        $.when(assignmentsDone, measurementsDone)
-                        .then(function(){
-console.log('GMA assignments and measurements done ...');
-                            dfdReady.resolve();
-                        })
-                        .fail(function(err){
-                            dfd.reject(err);
-                        });
-
-
-                    })
-                    .fail(function(err){
-                        dfd.reject(err);
-                    });
-                } else {
-                    // Nothing to do if no GMA
-                    dfdReady.resolve();
-                }
                 // Get transactions to send
                 var lastSyncTimestamp = req.param('lastSyncTimestamp');
                 getTransactionsForUser(uuid, lastSyncTimestamp)
@@ -115,14 +84,6 @@ console.log('GMA assignments and measurements done ...');
                 .fail(function(err){
                     dfd.reject(err);
                 });
-            })
-            .fail(function(err){
-                dfd.reject(err);
-            });
-
-            $.when(dfdReady)
-            .then(function(){
-
             })
             .fail(function(err){
                 dfd.reject(err);
@@ -167,98 +128,6 @@ var validateUser = function( guid ) {
 
 
 
-var setupGMA = function( username, password ) {
-    var dfd = $.Deferred();
-    console.log('setting up GMA .. ');
-    /// setup here:
-
-    var dummy = {
-        nodes: { 101: "Assign1", 120: "Assign2"}
-    };
-    dfd.resolve(dummy);
-
-    return dfd;
-};
-
-
-
-var getAssignments = function( gma ) {
-    var dfd = $.Deferred();
-    console.log('getting assignments ');
-
-    // assume all new
-    var numDone = 0;
-    var numToDo = 0;
-    for (var id in gma.nodes){
-        var createIt = function(gmaId, name) {
-            NSServerCampus.create({
-
-                UUID: ADCore.util.createUUID(),
-                node_id: gmaId,
-            })
-            .then(function(campus){
-                campus.addTranslation({
-                    language_code: 'en',
-                    short_name: name
-                })
-                .then(function(){
-                    numDone++;
-                    if (numDone == numToDo){
-                        dfd.resolve();
-                    }
-                })
-                .fail(function(err){
-                    dfd.reject(err);
-                });
-            })
-            .fail(function(err){
-                dfd.reject(err);
-            });
-        };
-        createIt(id, gma.nodes[id]);
-        numToDo++;
-    }
-    /*
-    1.1 if Add
-        insert CAMPUS[ UUID, nodeID ]
-        insert CampusTrans [ langCode, name ]
-       else
-    If update and name change -> update campusTrans[lang, name]
-                -> for all users in userCampus with campus_uuid
-                    -> TransactionLog [user_uuid, timestamp, ….]
-
-
-    1.2. -> user_campus[user_uuid, campus_uuid]
-        -> TransactionLog [user_uuid, timestamp, ….]
-     */
-
-//    dfd.resolve();
-
-    return dfd;
-};
-
-
-
-var getMeasurements = function( gma ) {
-    var dfd = $.Deferred();
-    console.log('getting measurements ');
-    /*
-    2. gma.getMeasurement()
-
-    Each and every measurement ->
-        if new Add -> Step[uuid, mid] & stepTrans [lang, name,    description]
-            -> for all users in user-campus with campus_uuid
-                -> TransactionLog [user_uuid, timestamp, ….]
-        else
-        if udpate -> udpate stepTrans[lang, name, desc]
-        -> for all users in user.campus with campus_uuid
-            -> TransactionLog [user_uuid, timestamp, ….]
-
-     */
-    dfd.resolve();
-
-    return dfd;
-};
 
 
 var getTransactionsForUser = function( userUuid, lastSync ) {
