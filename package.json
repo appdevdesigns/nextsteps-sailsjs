@@ -20,7 +20,7 @@
   "scripts": {
     "start": "node app.js",
     "debug": "node debug app.js",
-    "test":  "make test"
+    "test":  "./node_modules/.bin/mocha --reporter dot test/*.js"
   },
   "main": "app.js",
   "repository": "",
