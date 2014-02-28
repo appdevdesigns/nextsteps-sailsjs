@@ -16,14 +16,14 @@
  */
 
 module.exports = {
-    
-  
+
+
   /**
    * Action blueprints:
    *    `/nsserver/ping`
    */
   ping: function (req, res) {
-    
+
     // Send a JSON response
     return res.json({
       status: 'pong'
@@ -48,6 +48,15 @@ module.exports = {
    *    `/nsserver/sync`
    */
   sync: function (req, res) {
+
+
+      var log = req.appdev.transactionLog;
+      ADCore.comm.success(res, {
+          "lastSyncTimestamp": req.appdev.timestamp,
+          "transactionLog":log
+        });
+
+/*
     NSServerSync.synchronize(req, res)
     .done(function(data) {
       ADCore.comm.success(res, data);
@@ -55,6 +64,7 @@ module.exports = {
     .fail(function(err){
       ADCore.comm.error(res, err);
     });
+*/
   },
 
 
@@ -64,5 +74,5 @@ module.exports = {
    */
   _config: {}
 
-  
+
 };

@@ -36,7 +36,9 @@ var paramsCorrect = function( req, format) {
 }
 
 
+
 module.exports = {
+
     synchronize: function (req, res) {
       var dfd = $.Deferred();
       if (!paramsCorrect(req, syncFormat) ) {
@@ -45,34 +47,34 @@ module.exports = {
           // read In given Data
           var userID = req.param('username');
           var password = req.param('password');
-          
+
           var guid = ADCore.auth.getAuth(req);
-          
-          
+
+
           // validateUser
           var validationDone = validateUser(guid);
-          
-          
+
+
           // setupGMA
           var setupDone = setupGMA(userID, password);
-          
-          
+
+
           $.when(validationDone, setupDone)
           .then(function(uuid, gma){
     console.log('validation and setup done...');
 
               // getAssignments
               var assignmentsDone = getAssignments(gma);
-              
+
               // getMeasurements
               var measurementsDone = getMeasurements(gma);
-          
-              
+
+
               $.when(assignmentsDone, measurementsDone)
               .then(function(){
-    console.log('assignments and measurements done ...');             
-                  
-    
+    console.log('assignments and measurements done ...');
+
+
                   // Get transactions to send
                   var lastSyncTimestamp = req.param('lastSyncTimestamp');
                   getTransactionsForUser(uuid, lastSyncTimestamp)
@@ -80,6 +82,9 @@ module.exports = {
                       var transactionLog = req.param('transactionLog');
                       applyTransactionsFromUser(uuid, transactionLog)
                       .done(function(timestamp) {
+
+
+
                           dfd.resolve({
                               "lastSyncTimestamp": timestamp,
                               "transactionLog": [{
@@ -105,21 +110,21 @@ module.exports = {
               .fail(function(err){
                   dfd.reject(err);
               });
-              
-              
+
+
           })
           .fail(function(err){
-             
+
               // how to handle an error here?
               dfd.reject(err);
           });
 
-          
-          
-          
-          
+
+
+
+
       }
-      
+
       return dfd;
     }
 };
@@ -128,7 +133,7 @@ module.exports = {
 
 var validateUser = function( guid ) {
     var dfd = $.Deferred();
-    
+
     console.log('validating user ... ');
     if (!guid) {
         dfd.reject("Invalid GUID");
@@ -139,7 +144,7 @@ var validateUser = function( guid ) {
         // create uuid, guid
         dfd.resolve(uuid);
     }
-    
+
     return dfd;
 };
 
@@ -150,7 +155,7 @@ var setupGMA = function( username, password ) {
     console.log('setting up GMA .. ');
     /// setup here:
     dfd.resolve();
-    
+
     return dfd;
 };
 
@@ -161,19 +166,19 @@ var getAssignments = function( gma ) {
     console.log('getting assignments ');
     /*
     1.1 if Add
-        insert CAMPUS[ UUID, nodeID ] 
+        insert CAMPUS[ UUID, nodeID ]
         insert CampusTrans [ langCode, name ]
        else
     If update and name change -> update campusTrans[lang, name]
-                -> for all users in userCampus with campus_uuid 
+                -> for all users in userCampus with campus_uuid
                     -> TransactionLog [user_uuid, timestamp, ….]
-                
+
 
     1.2. -> user_campus[user_uuid, campus_uuid]
-        -> TransactionLog [user_uuid, timestamp, ….] 
+        -> TransactionLog [user_uuid, timestamp, ….]
      */
     dfd.resolve();
-    
+
     return dfd;
 };
 
@@ -184,7 +189,7 @@ var getMeasurements = function( gma ) {
     console.log('getting measurements ');
     /*
     2. gma.getMeasurement()
-    Each and every measurement -> 
+    Each and every measurement ->
         if Add -> Step[uuid, mid] -> stepTrans [lang, name,    description]
             campusSteps[campus_uuid, step_uuid]
             -> for all users in user-campus with campus_uuid
@@ -196,7 +201,7 @@ var getMeasurements = function( gma ) {
 
      */
     dfd.resolve();
-    
+
     return dfd;
 };
 
@@ -209,7 +214,7 @@ var getTransactionsForUser = function( userUuid, lastSync ) {
 
      */
     dfd.resolve("log");
-    
+
     return dfd;
 };
 
@@ -222,7 +227,7 @@ var applyTransactionsFromUser = function( userUuid, log ) {
     Return the current sync time
      */
     dfd.resolve("syncTime = now");
-    
+
     return dfd;
 };
 
