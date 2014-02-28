@@ -218,6 +218,13 @@ module.exports = {
                     hasPermission:function() {return true;}
             };
         }
+    },
+    
+    util: {
+        createUUID: function() {
+            var uuid = require('node-uuid');
+            return uuid.v4();
+        }
     }
 };
 

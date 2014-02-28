@@ -11,7 +11,8 @@
     "optimist": "0.3.4",
     "sails-mysql": "~0.9.9",
     "gma-api": "git://github.com/appdevdesigns/gma-api",
-    "jquery": "~1.8.3"
+    "jquery": "~1.8.3",
+    "node-uuid": "^1.4.1"
   },
   "devDependencies": {
     "mocha": "^1.17.1",
@@ -20,7 +21,7 @@
   "scripts": {
     "start": "node app.js",
     "debug": "node debug app.js",
-    "test":  "make test"
+    "test": "make test"
   },
   "main": "app.js",
   "repository": "",
