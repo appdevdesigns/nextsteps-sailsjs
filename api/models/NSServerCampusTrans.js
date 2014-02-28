@@ -1,26 +1,26 @@
 /**
  * NSServerCampusTrans
  *
- * @module      :: Model
- * @description :: A short summary of how this model works and what it represents.
+ * @module      :: Model NSServerCampusTrans
+ * @description :: Contains translation strings for NSServerCampus model.
  * @docs		:: http://sailsjs.org/#!documentation/models
  */
 
 module.exports = {
-  tableName: 'nextsteps_campus_trans',
-  attributes: {
+        
+    tableName: 'nextsteps_campus_trans',
 
-  	/* e.g.
-  	nickname: 'string'
-  	*/
+    attributes: {
 
-    campus_id	: 'INTEGER',
+        /* e.g.nickname: 'string' */    
 
-
-    language_code	: 'STRING',
+        language_code	: 'STRING',
 
 
-    name	: 'STRING'
-  }
+        short_name	: 'STRING',
+
+
+        long_name	: 'STRING'
+    }
 
 };
