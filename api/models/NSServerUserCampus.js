@@ -1,23 +1,25 @@
 /**
  * NSServerUserCampus
  *
- * @module      :: Model
- * @description :: A short summary of how this model works and what it represents.
+ * @module      :: Model NSServerUserCampus
+ * @description :: Association model for correlating users and campuses.
  * @docs		:: http://sailsjs.org/#!documentation/models
  */
 
 module.exports = {
-  tableName: 'nextsteps_user_campus',
-  attributes: {
 
-  	/* e.g.
-  	nickname: 'string'
-  	*/
+    tableName: 'nextsteps_user_campus',
 
-    campus_UUID	: 'STRING',
+    attributes: {
+  	
+  	    /* e.g.
+  	    nickname: 'string'
+  	    */
+    
+        user_UUID	: 'STRING',
 
 
-    user_UUID	: 'STRING'
-  }
+        campus_UUID	: 'STRING'
+    }
 
 };
