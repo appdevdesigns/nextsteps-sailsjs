@@ -1,31 +1,26 @@
 /**
  * NSServerUser
  *
- * @module      :: Model
- * @description :: A short summary of how this model works and what it represents.
+ * @module      :: Model NSServerUser
+ * @description :: A list of users associating the user's NextSteps UUID with CAS GUID.
  * @docs		:: http://sailsjs.org/#!documentation/models
  */
 
 module.exports = {
 
-  tableName: 'nextsteps_user',
+    tableName: 'nextsteps_user',
 
-  attributes: {
-  	
-  	/* e.g.
-  	nickname: 'string'
-  	*/
-    
-    UUID	: 'STRING',
+    attributes: {
 
+        /* e.g.
+        nickname: 'string'
+        */
 
-    GUID	: 'STRING',
+        UUID	: 'STRING',
 
 
-    username	: 'STRING',
+        GUID	: 'STRING',
 
-
-    password	: 'STRING'
-  }
+    }
 
 };
