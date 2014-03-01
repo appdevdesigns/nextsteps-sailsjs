@@ -16,7 +16,7 @@ module.exports = {
         nickname: 'string'
          */
 
-        user_uuid	: 'STRING',
+        user_UUID	: 'STRING',
 
 /*  Using updatedAt field rather than a timestamp.
     timestamp	: 'DATETIME',
@@ -24,6 +24,33 @@ module.exports = {
 
 
         transaction	: 'JSON'
+        
+
+    },
+
+    //  Retrieve a list of transactions for a given user after a specified timestamp.
+    getLogForUser : function(userId, timestamp, cb) {
+                
+        if ( (undefined == userId) || (undefined == timestamp) ) {
+            console.log('Error: NSServerTransactionLog::getLogForUser - Invalid parameter');
+            return;
+        }
+        if ( undefined == cb ) {
+            console.log('Error: NSServerTransactionLog::getLogForUser - no callback provided')
+            return;
+        }
+        NSServerTransactionLog.find({user_UUID:userId}).where({updatedAt:{'>=':timestamp}})
+        .then(function (logObjs){
+            var userLog = []; // returned list of transactions for a user.
+            for (var t = 0; t < logObjs.length; t++) {
+                userLog.push(logObjs[t].transaction);
+            }
+            cb(null, userLog);
+        })
+        .fail(function(err){
+            cb(err);
+        });            
     }
+
 
 };
