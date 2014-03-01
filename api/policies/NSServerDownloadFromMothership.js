@@ -20,7 +20,7 @@ module.exports = function(req, res, next) {
     if (true || config.gma) {
         var userID = req.param('username');
         var password = req.param('password');
-        req.appdev.userUUID = 'UUID';
+        //req.appdev.userUUID = 'UUID';
         // setupGMA
         setupGMA(userID, password)
         .fail(function(err){
@@ -62,10 +62,10 @@ if (typeof req.param('test2') != 'undefined') {
             // GMA data retrieved; now make sure we're in sync
             syncAssignments(gma.assignments, req.appdev.userUUID)
             .then(function(){
-//console.log('   syncAssignments() .then() ');
+console.log('   syncAssignments() .then() ');
                 syncMeasurements(gma.measurements)
                 .then(function(){
-//console.log('GMA assignments and measurements done ...');
+console.log('GMA assignments and measurements done ...');
                     dfd.resolve();
                 })
                 .fail(function(err){

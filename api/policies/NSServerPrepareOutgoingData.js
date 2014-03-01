@@ -43,13 +43,16 @@ module.exports = function(req, res, next) {
     console.log('preparing outgoing data ...');
     var lastTime = req.param('lastSyncTimestamp');
     var userId = req.appdev.userUUID;
- 
+
+console.log('userId['+userId+']');
+console.log('lastTime['+lastTime+']');
+
     NSServerTransactionLog.getLogForUser(userId, lastTime, function(err, data){
         if (err) {
             console.log(err);
         }
         else {
-            req.appdev.transactionLog = data;    
+            req.appdev.transactionLog = data;
             next();
         }
     });

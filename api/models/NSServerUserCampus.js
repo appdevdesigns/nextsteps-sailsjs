@@ -11,11 +11,11 @@ module.exports = {
     tableName: 'nextsteps_user_campus',
 
     attributes: {
-  	
+
   	    /* e.g.
   	    nickname: 'string'
   	    */
-    
+
         user_UUID	: 'STRING',
 
 

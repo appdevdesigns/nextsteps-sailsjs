@@ -49,10 +49,12 @@ module.exports = {
    */
   sync: function (req, res) {
 
+console.log('===========');
+console.log('Actually in controller.sync()');
 
       var log = req.appdev.transactionLog;
       ADCore.comm.success(res, {
-          "lastSyncTimestamp": req.appdev.timestamp,
+          "lastSyncTimestamp": Date.now(),
           "transactionLog":log
         });
 

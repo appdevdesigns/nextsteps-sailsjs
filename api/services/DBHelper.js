@@ -22,34 +22,34 @@ module.exports = {
             for (var i=0; i<list.length; i++) {
                 ids.push(list[i][keyAB]);
             }
-            
+
             if (ids.length == 0) {
                 console.log("modelA empty; all done");
                 // None in the first filter; return an empty list
                 if (cb) cb(null, []);
                 dfd.resolve([]);
             } else {
-                
+
                 filter[keyB] = ids;
     console.log('modelB.filter:');
     console.log(filter);
-    
+
                 modelB.find(filter)
                 .then(function(listCampuses){
-    
+
     console.log('modelB list:');
     console.log(listCampuses);
-    
+
     console.log('....');
     console.log('cb():');
     console.log(cb);
                     /*
                     var numDone = 0;
                     for(var lc=0; lc<listCampuses.length; lc++) {
-    
+
                         var addIt = function(item) {
                             item.trans(function(err, trans) {
-    
+
                                 if (err) {
                                     console.log(err);
                                 } else {
@@ -60,7 +60,7 @@ module.exports = {
                                     if (cb) cb(null, listCampuses);
                                     dfd.resolve(listCampuses);
                                 }
-    
+
                             });
                         };
                         addIt(listCampuses[lc]);
@@ -68,7 +68,7 @@ module.exports = {
                     */
                     if (cb) cb(null, listCampuses);
                     dfd.resolve(listCampuses);
-    
+
                 })
                 .fail(function(err){
                     if (cb) cb(err);
@@ -131,13 +131,13 @@ console.log("manyThrough err: "+err);
 
         return dfd;
     },
-    
+
     addTransaction: function(operation, obj, user) {
         var dfd = $.Deferred();
         obj.transaction(operation, user.default_lang)
         .then(function(xEntry){
             NSServerTransactionLog.create({
-                user_uuid: user.UUID,
+                user_UUID: user.UUID,
                 transaction: xEntry
             })
             .then(function(){
