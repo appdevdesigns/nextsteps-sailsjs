@@ -89,7 +89,6 @@ module.exports = {
                  cb = lang;
                  lang = 'en';
              }
-
              NSServerStepsTrans.find({step_id:this.id,language_code:lang})
              .then(function(listTrans){
                  var thisTrans = {};
@@ -168,16 +167,16 @@ module.exports = {
     },
     
     // Life cycle callbacks
-    afterCreate: function(newEntry, cb) {
-        createTransaction(newEntry.id, 'create')
-        .then(function(){
-            cb(null);
-        })
-        .fail(function(err){
-            cb(err);
-        });
-    },
-    
+//    afterCreate: function(newEntry, cb) {
+//        createTransaction(newEntry.id, 'create')
+//        .then(function(){
+//            cb(null);
+//        })
+//        .fail(function(err){
+//            cb(err);
+//        });
+//    },
+//    
     afterUpdate: function(entry, cb) {
         createTransaction(entry.id, 'update')
         .then(function(){
