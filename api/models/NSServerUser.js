@@ -71,8 +71,8 @@ module.exports = {
         addCampus: function(campusObj, cb) {
             var dfd = $.Deferred();
             NSServerUserCampus.create({
-                campus_UUID: campusObj.UUID,
-                user_UUID: this.UUID
+                campus_uuid: campusObj.campus_uuid,
+                user_uuid: this.user_uuid
             })
             .then(function(obj){
                 if (cb) {

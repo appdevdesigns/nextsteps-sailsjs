@@ -71,7 +71,7 @@ var updateCampus = function(campus, name) {
 
     NSServerCampusTrans.findOne({
         campus_id: campus.id,
-        language_code: 'en'
+        language_code: ADCore.user.current.getLanguageCode()
     })
     .then(function(trans){
         if (trans && (name != trans.campus_label)){
@@ -108,7 +108,7 @@ var createCampus = function(gmaId, name) {
     .then(function(campus){
         campus.addTranslation({
             campus_id: campus.id,
-            language_code: 'en',
+            language_code: ADCore.user.current.getLanguageCode(),
             campus_label: name
         })
         .then(function(){
@@ -227,38 +227,85 @@ var addUserToCampus = function(userUUID, campus) {
 
 var addUserToNodes = function(userUUID, nodes) {
     var dfd = $.Deferred();
+    
+    if ($.isEmptyObject(nodes)) {
+        dfd.resolve();
+    } else {
+        var numDone = 0;
+        var numToDo = 0;
+        
+        for (var id in nodes){
+            NSServerCampus.findOne({
+                node_id: id
+            })
+            .then(function(campus){
+                if (campus){
+                    addUserToCampus(userUUID, campus)
+                    .then(function(){
+                        numDone++;
+                        if (numDone == numToDo){
+                            dfd.resolve();
+                        }
+                    })
+                    .fail(function(err){
+                        dfd.reject(err);
+                    });
+                } else {
+                    dfd.reject("Data error:  Campus not found");
+                }
+                
+            })
+            .fail(function(err){
+                dfd.reject(err);
+            });
+            numToDo++;
+        }
+    }
+    return dfd;
+};
 
-    var numDone = 0;
-    var numToDo = 0;
 
-    for (var id in nodes){
-        NSServerCampus.findOne({
-            node_id: id
-        })
-        .then(function(campus){
-            if (campus){
-                addUserToCampus(userUUID, campus)
+var removeUserFromNodes = function(userUUID, assignments) {
+    var dfd = $.Deferred();
+    
+    NSServerUserCampus.campusesForUser(userUUID)
+    .then(function(campuses){
+        var numDone = 0;
+        var numToDo = 0;
+        campuses.forEach(function(campus){
+            var nodeId = campus.node_id;
+            if (typeof (assignments[nodeId]) == 'undefined') {
+                // Need to remove this node from the user
+                // since there is no assignment in GMA
+                NSServerUserCampus.destroy({
+                    user_uuid: user_uuid,
+                    campus_uuid: campus.campus_uuid
+                })
                 .then(function(){
                     numDone++;
-                    if (numDone == numToDo){
-                        dfd.resolve();
-                    }
                 })
                 .fail(function(err){
                     dfd.reject(err);
                 });
             } else {
-                dfd.reject("Data error:  Campus not found");
+                numDone++;
             }
-
-        })
-        .fail(function(err){
-            dfd.reject(err);
+            numToDo++;
+            
+            if (numDone == numToDo) {
+                dfd.resolve();
+            }
         });
-        numToDo++;
-    }
+        if (numToDo == 0) {
+            dfd.resolve();
+        }
+    })
+    .fail(function(err){
+        dfd.reject(err);
+    });
+
     return dfd;
-};
+}
 
 
 
@@ -269,11 +316,16 @@ var syncAssignments = function( assignments, userUUID ) {
     // Make sure our tables match the latest from GMA
     syncNodeData(assignments)
     .then(function(){
-//console.log('   syncNodeData().then() ... ');
         // Update User-Node assignments
         addUserToNodes(userUUID, assignments)
         .then(function(){
-            dfd.resolve();
+            removeUserFromNodes(userUUID, assignments)
+            .then(function(){
+                dfd.resolve();
+            })
+            .fail(function(err){
+                dfd.reject(err);
+            });
         })
         .fail(function(err){
             dfd.reject(err);
@@ -292,7 +344,7 @@ var updateStep = function(step, measurement) {
     var dfd = $.Deferred();
     NSServerStepsTrans.findOne({
         step_id: step.id,
-        language_code: 'en'
+        language_code: ADCore.user.current.getLanguageCode()
     })
     .then(function(trans){
         if (trans
@@ -332,7 +384,7 @@ var createStep = function(campusUUID, measurement) {
     .then(function(step){
         step.addTranslation({
             step_id: step.id,
-            language_code: 'en',
+            language_code: ADCore.user.current.getLanguageCode(),
             step_label: measurement.measurementName,
             step_description: measurement.measurementDescription
         })
@@ -443,18 +495,12 @@ var syncMeasurementData = function(measurements) {
     var numDone = 0;
     var numToDo = 0;
 
-
-
-//console.log( 'syncMeasurementData():  trying to process these measurements:');
-//console.log(measurements);
-
     for (var nodeId in measurements){
         numToDo++;
         processNodeMeasurements(nodeId, measurements[nodeId])
         .then(function(){
             numDone++;
             if (numDone == numToDo){
-//console.log('syncMeasurementData() ... resolving() ');
                 dfd.resolve();
             }
         })
@@ -480,21 +526,6 @@ var syncMeasurements = function( measurements ) {
     .fail(function(err){
         dfd.reject(err);
     });
-
-    /*
-    2. gma.getMeasurement()
-
-    Each and every measurement ->
-        if new Add -> Step[uuid, mid] & stepTrans [lang, name,    description]
-            -> for all users in user-campus with campus_uuid
-                -> TransactionLog [user_uuid, timestamp, ….]
-        else
-        if udpate -> udpate stepTrans[lang, name, desc]
-        -> for all users in user.campus with campus_uuid
-            -> TransactionLog [user_uuid, timestamp, ….]
-
-     */
-
     return dfd;
 };
 
