@@ -2,7 +2,7 @@
  * NSServerCampus
  *
  * @module      :: Model NSServerCampus
- * @description :: A list of known campuses. The node_id field represents the GMA node id. 
+ * @description :: A list of known campuses. The node_id field represents the GMA node id.
  *                 See also NSServerCampusTrans for translation strings associated with campuses.
  * @docs		:: http://sailsjs.org/#!documentation/models
  */
@@ -22,8 +22,8 @@ module.exports = {
 
 
     node_id	: 'INTEGER',
-    
-    
+
+
     // Generate transaction entry
     transaction: function(operation, lang, cb) {
         var dfd = $.Deferred();
@@ -41,8 +41,11 @@ module.exports = {
                     }
                     dfd.reject(err);
                 } else {
-                    xEntry.params.short_name = transEntry.short_name;
-                    xEntry.params.long_name = transEntry.long_name;
+console.log('Campus.transaction(): translation results:');
+console.log(transEntry);
+                    xEntry.params.campus_label = transEntry.campus_label;
+//                    xEntry.params.long_name = transEntry.long_name;
+console.log(xEntry);
                     if (cb) {
                         cb(xEntry);
                     }
@@ -52,7 +55,7 @@ module.exports = {
         }
         return dfd;
     },
-    
+
     addTranslation: function(transEntry, cb) {
         var dfd = $.Deferred();
         transEntry.campus_id = this.id;
@@ -127,13 +130,13 @@ module.exports = {
     }
   },
 
-  
+
   // Life cycle callbacks
   afterCreate: function(newEntry, cb) {
       // Nothing to do.  No users if we're just now creating a node
       cb();
   },
-  
+
   afterUpdate: function(entry, cb) {
       NSServerCampus.findOne(entry.id)
       .then(function(campus){
@@ -167,6 +170,6 @@ module.exports = {
           cb(err);
       });
   }
-  
+
 
 };

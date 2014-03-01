@@ -18,7 +18,7 @@ module.exports = function(req, res, next) {
     var userLang = 'en'; // get user default language from session info
     if ( req.param('test') ) {
 
-        guid = '9ACB3BAC-C706-5096-4ED0-2557002E3ADE';
+        userGuid = '9ACB3BAC-C706-5096-4ED0-2557002E3ADE';
         req.body.lastSyncTimestamp = Date.now() - 10;
         req.body.username = 'jon@vellacott.co.uk';
         req.body.password = 'manila';

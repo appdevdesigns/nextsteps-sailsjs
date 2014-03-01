@@ -137,7 +137,7 @@ console.log("manyThrough err: "+err);
         obj.transaction(operation, user.default_lang)
         .then(function(xEntry){
             NSServerTransactionLog.create({
-                user_UUID: user.UUID,
+                user_uuid: user.user_uuid,
                 transaction: xEntry
             })
             .then(function(){

@@ -416,10 +416,11 @@ var processNodeMeasurements = function(nodeId, measurements) {
                     });
                     numToDo++;
                 }
-            })
-            .fail(function(err){
-                dfd.reject(err);
-            });
+            }
+        })
+        .fail(function(err){
+            dfd.reject(err);
+        });
 
     } else {
 

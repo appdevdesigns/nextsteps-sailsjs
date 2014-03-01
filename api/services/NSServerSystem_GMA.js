@@ -35,7 +35,7 @@ module.exports = {
             console.log('GMA setup done...');
             console.log(gma);
 
-
+/*
 //// Temporary Testing options:
 if (typeof req.param('test2') != 'undefined') {
     gma.assignments[101] = 'Assign1b';
@@ -59,7 +59,7 @@ if (typeof req.param('test2') != 'undefined') {
           }];
     req.appdev.userUUID = 'UUID2';
 }
-
+*/
             dfd.resolve(gma);
 
         });
