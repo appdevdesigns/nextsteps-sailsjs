@@ -21,50 +21,53 @@ module.exports = {
 
 
         GUID	: 'STRING',
+        
+ 
+        default_lang : 'STRING',
 
 
-    campuses: function(filter, cb) {
+        campuses: function(filter, cb) {
 
-        var dfd = $.Deferred();
+            var dfd = $.Deferred();
 
-        if (typeof cb == 'undefined') {
-            if (typeof filter == 'function') {
-                cb = filter;
-                filter = {};
-            }
-        }
-
-        filter = filter || {};
-
-        //
-        DBHelper.manyThrough(NSServerUserCampus, {user_UUID:this.UUID}, NSServerCampus, 'campus_UUID', 'UUID', filter)
-        .then(function(listCampuses) {
-
-            // now tell the campuses to translate themselves
-            DBHelper.translateList(listCampuses, { language_code:true, name:true })
-            .then(function(list) {
-
-                if (cb) {
-                    cb(null, listCampuses);
+            if (typeof cb == 'undefined') {
+                if (typeof filter == 'function') {
+                    cb = filter;
+                    filter = {};
                 }
-                dfd.resolve(listCampuses);
+            }
+
+            filter = filter || {};
+
+            //
+            DBHelper.manyThrough(NSServerUserCampus, {user_UUID:this.UUID}, NSServerCampus, 'campus_UUID', 'UUID', filter)
+            .then(function(listCampuses) {
+
+                // now tell the campuses to translate themselves
+                DBHelper.translateList(listCampuses, { language_code:true, name:true })
+                .then(function(list) {
+
+                    if (cb) {
+                        cb(null, listCampuses);
+                    }
+                    dfd.resolve(listCampuses);
+                })
+                .fail(function(err){
+                    if (cb) {
+                        cb(err);
+                    }
+                    dfd.reject(err);
+                });
             })
             .fail(function(err){
+
                 if (cb) {
                     cb(err);
                 }
                 dfd.reject(err);
             });
-        })
-        .fail(function(err){
 
-            if (cb) {
-                cb(err);
-            }
-            dfd.reject(err);
-        });
-
-        return dfd;
+            return dfd;
  /*
         NextStepsUserCampus.find({user_UUID:this.UUID})
         .then(function(list){
@@ -111,7 +114,7 @@ module.exports = {
 */
 
 
-    },
+    }, // attributes
 
 
 
