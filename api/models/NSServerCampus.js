@@ -22,7 +22,13 @@ module.exports = {
 
 
     node_id	: 'INTEGER',
-
+    
+    // Is the user restricted from modifying this entry?
+    userModifyRestricted: function() {
+        // Not allowed if this is a "GMA" node
+        return (this.node_id != 0);
+    },
+    
 
     // Generate transaction entry
     transaction: function(operation, lang, cb) {
@@ -41,11 +47,8 @@ module.exports = {
                     }
                     dfd.reject(err);
                 } else {
-console.log('Campus.transaction(): translation results:');
-console.log(transEntry);
                     xEntry.params.campus_label = transEntry.campus_label;
 //                    xEntry.params.long_name = transEntry.long_name;
-console.log(xEntry);
                     if (cb) {
                         cb(xEntry);
                     }

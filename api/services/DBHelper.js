@@ -151,7 +151,22 @@ console.log("manyThrough err: "+err);
             dfd.reject(err);
         });
         return dfd;
+    },
+    
+    addTransactionToResponse: function(operation, obj, user, res) {
+        var dfd = $.Deferred();
+        obj.transaction(operation, user.default_lang)
+        .then(function(xEntry){
+            // TODO:  Tack this on to the end of the list in the response
+            dfd.resolve();
+        })
+        .fail(function(err){
+            dfd.reject(err);
+        });
+        return dfd;
     }
+
+
 
 };
 

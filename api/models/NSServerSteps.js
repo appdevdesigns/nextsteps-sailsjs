@@ -20,14 +20,20 @@ module.exports = {
 
          measurement_id	: 'STRING',
 
+         // Is the user restricted from modifying this entry?
+         userModifyRestricted: function() {
+             // Not allowed if this is a "GMA" node
+             return (this.measurement_id != 0);
+         },
+
          // Generate transaction entry
          transaction: function(operation, lang, cb) {
              var dfd = $.Deferred();
              var xEntry = {  'operation': operation,
                              'model': 'Step',
                              'params': {
-                                 'uuid': this.UUID,
-                                 'campus_uuid': this.campus_UUID
+                                 'step_uuid': this.step_uuid,
+                                 'campus_uuid': this.campus_uuid
                              } };
              if (operation != "destroy") {
                  // Look up the translation
@@ -38,7 +44,8 @@ module.exports = {
                          }
                          dfd.reject(err);
                      } else {
-                         $.extend(xEntry.params, transEntry);
+                         xEntry.params.step_label = transEntry.step_label;
+                         xEntry.params.description = transEntry.description;
                          if (cb) {
                              cb(xEntry);
                          }
@@ -130,41 +137,30 @@ module.exports = {
          // Handles both personal steps and campus steps
          users: function(cb) {
              var dfd = $.Deferred();
-             var self = this;
              
+             var userListDfd = $.Deferred();
              if (this.isPersonal()) {
                  // A Personal step; get the user UUIDs
-                 getPersonalStepUsers(this)
-                 .then(function(users){
-                     // All done
-                     if (cb) {
-                         cb(null, users);
-                     }
-                     dfd.resolve(users);
-                 })
-                 .fail(function(err){
-                     if (cb) {
-                         cb(err);
-                     }
-                     dfd.reject(err);
-                 });
+                 userListDfd = getPersonalStepUsers(this);
              } else {
                  // A campus step; get the campus users
-                 getCampusStepUsers(this)
-                 .then(function(userObjs){
-                     // All done
-                     if (cb) {
-                         cb(null, userObjs);
-                     }
-                     dfd.resolve(userObjs);
-                 })
-                 .fail(function(err){
-                     if (cb) {
-                         cb(err);
-                     }
-                     dfd.reject(err);
-                 });
+                 userListDfd = getCampusStepUsers(this);
              }
+
+             $.when(userListDfd)
+             .then(function(users){
+                 // All done
+                 if (cb) {
+                     cb(null, users);
+                 }
+                 dfd.resolve(users);
+             })
+             .fail(function(err){
+                 if (cb) {
+                     cb(err);
+                 }
+                 dfd.reject(err);
+             });
              
              return dfd;
          }
