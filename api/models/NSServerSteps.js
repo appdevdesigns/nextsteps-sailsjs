@@ -101,7 +101,7 @@ module.exports = {
              var dfd = $.Deferred();
              if (!this.isPersonal()) {
                  NSServerCampus.findOne({
-                     compus_uuid: this.campus_uuid
+                     campus_uuid: this.campus_uuid
                  })
                  .then(function(campus) {
                      if (cb) {

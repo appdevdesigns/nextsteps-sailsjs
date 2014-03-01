@@ -65,8 +65,7 @@ module.exports = {
             });
 
             return dfd;
-<<<<<<< Updated upstream
-        },
+        }, // campuses
 
     
         addCampus: function(campusObj, cb) {
@@ -88,10 +87,7 @@ module.exports = {
                 dfd.reject(err);
             });
             return dfd;
-        }
-
-    }// attributes
-=======
+        } // addCampus
  
     }, // attributes
 
@@ -140,8 +136,5 @@ module.exports = {
         });
         return dfd;
     }
-
-  }
->>>>>>> Stashed changes
 
 };

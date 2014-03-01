@@ -2,7 +2,7 @@
  * NSServerCampus
  *
  * @module      :: Model NSServerCampus
- * @description :: A list of known campuses. The node_UUID field represents the GMA node id. 
+ * @description :: A list of known campuses. The node_id field represents the GMA node id. 
  *                 See also NSServerCampusTrans for translation strings associated with campuses.
  * @docs		:: http://sailsjs.org/#!documentation/models
  */
@@ -18,7 +18,7 @@ module.exports = {
   	nickname: 'string'
   	*/
 
-    UUID	: 'STRING',
+    campus_uuid	: 'STRING',
 
 
     node_id	: 'INTEGER',
@@ -30,7 +30,7 @@ module.exports = {
         var xEntry = {  'operation': operation,
                         'model': 'Campus',
                         'params': {
-                            'uuid': this.UUID
+                            'campus_uuid': this.campus_uuid
                         } };
         if (operation != "destroy") {
             // Look up the translation
@@ -110,7 +110,7 @@ module.exports = {
         }
 
         filter = filter || {};
-        DBHelper.manyThrough(NSServerUserCampus, {campus_UUID:this.UUID}, NSServerUser, 'user_UUID', 'UUID', filter)
+        DBHelper.manyThrough(NSServerUserCampus, {campus_uuid:this.campus_uuid}, NSServerUser, 'user_uuid', 'user_uuid', filter)
         .then(function(listUsers) {
             if (cb) {
                 cb(null, listUsers);

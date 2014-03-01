@@ -20,7 +20,7 @@ module.exports = {
         step_label	: 'STRING',
 
 
-        description	: 'STRING'
+        step_description	: 'STRING'
     },
     
     // Life cycle callbacks
