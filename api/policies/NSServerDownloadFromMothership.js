@@ -7,201 +7,61 @@
  * @docs        :: http://sailsjs.org/#!documentation/policies
  *
  */
+
 var $ = require('jquery');
-var GMA = require('gma-api');
+
+//// This is where we define our known adaptors:
+var externalSystems = null;
+
 
 module.exports = function(req, res, next) {
 
-    console.log('Sync from GMA ...');
-
-    var dfd = $.Deferred();
-
-    // Sync the Data from GMA
-    if (true || config.gma) {
-        var userID = req.param('username');
-        var password = req.param('password');
-        //req.appdev.userUUID = 'UUID';
-        // setupGMA
-        setupGMA(userID, password)
-        .fail(function(err){
-            console.log();
-            console.error(' *** error attempting to setupGMA():');
-            console.log(err);
-            dfd.reject(err);
-        })
-        .then(function(gma){
-
-console.log('GMA setup done...');
-console.log(gma);
-
-
-//// Temporary Testing options:
-if (typeof req.param('test2') != 'undefined') {
-    gma.assignments[101] = 'Assign1b';
-    gma.assignments[199] = 'Assign3';
-    gma.measurements[101][1].measurementName = 'NAME2';
-    gma.measurements[101][1].measurementDescription = 'DESC2';
-    gma.measurements[120].push(
-           {
-               measurementId: 25,
-               measurementName: "name4a",
-               measurementDescription: "desc4a",
-               measurementValue: 33
-           });
-
-    gma.measurements[199] = [
-          {
-              measurementId: 92,
-              measurementName: "name1b",
-              measurementDescription: "desc1b",
-              measurementValue: 33
-          }];
-    req.appdev.userUUID = 'UUID2';
-}
-
-            // GMA data retrieved; now make sure we're in sync
-            syncAssignments(gma.assignments, req.appdev.userUUID)
-            .then(function(){
-console.log('   syncAssignments() .then() ');
-                syncMeasurements(gma.measurements)
-                .then(function(){
-console.log('GMA assignments and measurements done ...');
-                    dfd.resolve();
-                })
-                .fail(function(err){
-                    dfd.reject(err);
-                });
-            })
-            .fail(function(err){
-                dfd.reject(err);
-            });
-        });
-
-    } else {
-        // Nothing to do if no GMA
-        dfd.resolve();
+    if (externalSystems == null) {
+        externalSystems = {
+                'none': function(req, res) { var dfd = $.Deferred(); dfd.resolve({assignments:{}, measurements:{}}); return dfd; },
+                'test': NSServerSystem_Test.download,
+                'GMA' : NSServerSystem_GMA.download
+        };
     }
 
-    $.when(dfd)
-    .then(function(){
-        next();
-    })
-    .fail(function(err){
-        ADCore.comm.error(res, err);
-    });
-};
+    if (externalSystems[sails.config.nsserver.externalSystem]) {
 
-
-
-var setupGMA = function( username, password ) {
-    var dfd = $.Deferred();
-
-    var gmaData = {};
-
-    console.log('in setupGMA() ... ');
-
-    /// setup here:
-    // create new gma instance
-    var gma = new GMA({
-        gmaBase: sails.config.nsserver.gmaBaseURL,
-        casURL: sails.config.nsserver.casURL
-    });
-
-    gma.loginDrupal(username, password)
-    .fail(function(err){
-        console.log("Problem logging in to GMA server");
-        console.log(err);
-        dfd.reject(err);
-    })
-    .done(function(){
-//console.log("gma.loginDrupal().done():  success");
-        console.log(gma.GUID, gma.preferredName, gma.renId);
-
-//console.log("\nFetching user assignments...");
-        gma.getAssignments()
+        externalSystems[sails.config.nsserver.externalSystem](req,res)
         .fail(function(err){
-            console.log("Problem fetching user assignments");
-            console.log(err);
-            dfd.reject(err);
+            ADCore.comm.error(res, err);
         })
-        .done(function(byID, byName, list) {
+        .then(function( data ){
 
-            gmaData.assignments = byID;
-            gmaData.measurements = {};
-
-            var numDone = 0;
-            for (var l=0; l<list.length; l++) {
-
-                var getMeasurements = function(assignment) {
-                    assignment.getMeasurements()
-                    .fail(function(err){
-                        dfd.reject(err);
-                    })
-                    .then(function(listMeasurements){
-                        gmaData.measurements[assignment.nodeId] = listMeasurements;
-                        numDone++;
-                        if (numDone >= list.length) {
-                            dfd.resolve(gmaData);
-                        }
-                    });
-                };
-                getMeasurements(list[l]);
-            }
+            // External data retrieved; now make sure we're in sync
+            syncAssignments(data.assignments, req.appdev.userUUID)
+            .fail(function(err){
+                ADCore.comm.error(res, err);
+            })
+            .then(function(){
+//console.log('   syncAssignments() .then() ');
+                syncMeasurements(data.measurements)
+                .fail(function(err){
+                    ADCore.comm.error(res, err);
+                })
+                .then(function(){
+//console.log('GMA assignments and measurements done ...');
+                    next();
+                });
+            });
 
         });
-    });
-
-/*
-    var dummy = {
-        assignments: { 101: "Assign1", 120: "Assign2"},
-        measurements: {
-            101: [
-            {
-                measurementId: 12,
-                measurementName: "name1",
-                measurementDescription: "desc1",
-                measurementValue: 33
-            },
-            {
-                measurementId: 13,
-                measurementName: "name2",
-                measurementDescription: "desc2",
-                measurementValue: 33
-            },
-            {
-                measurementId: 14,
-                measurementName: "name3",
-                measurementDescription: "desc3",
-                measurementValue: 33
-            }],
 
 
-            120: [
-              {
-                  measurementId: 22,
-                  measurementName: "name1a",
-                  measurementDescription: "desc1a",
-                  measurementValue: 33
-              },
-              {
-                  measurementId: 23,
-                  measurementName: "name2a",
-                  measurementDescription: "desc2a",
-                  measurementValue: 33
-              },
-              {
-                  measurementId: 24,
-                  measurementName: "name3a",
-                  measurementDescription: "desc3a",
-                  measurementValue: 33
-            }]
-        }
-    };
-    dfd.resolve(dummy);
-*/
+    } else {
 
-    return dfd;
+        var err = new Error('*** Error: unknown configured system ['+sails.config.nsserver.externalSystem+']');
+        console.log(err);
+        next(err);
+    }
+
 };
+
+
 
 
 
@@ -643,3 +503,6 @@ var syncMeasurements = function( measurements ) {
 
     return dfd;
 };
+
+
+

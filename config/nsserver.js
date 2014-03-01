@@ -14,6 +14,8 @@
 
 module.exports.nsserver = {
 
+  // External System
+  externalSystem:'test',    // ['none', 'test', 'GMA' ]
 
   // The url to the gma server you want to sync with
   gmaBaseURL: "http://gma.zteam.biz/",

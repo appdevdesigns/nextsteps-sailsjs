@@ -46,10 +46,11 @@ module.exports.policies = {
     auth: [],
     sync:[ 'isAuthenticatedService',
            'NSServerValidateUser',
+           'NSServerDownloadFromMothership',
+           'NSServerPrepareOutgoingData',
            'NSServerProcessClientData',
-           'NSServerSyncToGMA',
-           'NSServerSyncFromGMA',
-           'NSServerPrepareOutgoingData'],
+           'NSServerUploadToMothership'
+           ],
     logout:true
 },
 };
