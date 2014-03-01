@@ -24,17 +24,41 @@ module.exports = function(req, res, next) {
         // setupGMA
         setupGMA(userID, password)
         .then(function(gma){
+            if (typeof req.param('test2') != 'undefined') {
+                gma.assignments[101] = 'Assign1b';
+                gma.assignments[199] = 'Assign3';
+                gma.measurements[101][1].measurementName = 'NAME2';
+                gma.measurements[101][1].measurementDescription = 'DESC2';
+                gma.measurements[120].push(
+                       {
+                           measurementId: 25,
+                           measurementName: "name4a",
+                           measurementDescription: "desc4a",
+                           measurementValue: 33
+                       });
+                
+                gma.measurements[199] = [
+                      {
+                          measurementId: 92,
+                          measurementName: "name1b",
+                          measurementDescription: "desc1b",
+                          measurementValue: 33
+                      }];
+                req.appdev.userUUID = 'UUID2';
+
+            }
 console.log('GMA setup done...');
-            // getAssignments
-            var assignmentsDone = syncAssignments(gma.assignments, req.appdev.userUUID);
-
-            // getMeasurements
-            var measurementsDone = syncMeasurements(gma.measurements);
-
-            $.when(assignmentsDone, measurementsDone)
+            // GMA data retrieved; now make sure we're in sync
+            syncAssignments(gma.assignments, req.appdev.userUUID)
             .then(function(){
-console.log('GMA assignments and measurements done ...');
-                dfd.resolve();
+                syncMeasurements(gma.measurements)
+                .then(function(){
+                    console.log('GMA assignments and measurements done ...');
+                    dfd.resolve();
+                })
+                .fail(function(err){
+                    dfd.reject(err);
+                });
             })
             .fail(function(err){
                 dfd.reject(err);
@@ -79,30 +103,30 @@ var setupGMA = function( username, password ) {
                 measurementValue: 33
             },
             {
-                measurementId: 13,
-                measurementName: "name2",
-                measurementDescription: "desc2",
+                measurementId: 14,
+                measurementName: "name3",
+                measurementDescription: "desc3",
                 measurementValue: 33
             }],
             
             
             120: [
               {
-                  measurementId: 13,
-                  measurementName: "name2",
-                  measurementDescription: "desc2",
+                  measurementId: 22,
+                  measurementName: "name1a",
+                  measurementDescription: "desc1a",
                   measurementValue: 33
               },
               {
-                  measurementId: 13,
-                  measurementName: "name2",
-                  measurementDescription: "desc2",
+                  measurementId: 23,
+                  measurementName: "name2a",
+                  measurementDescription: "desc2a",
                   measurementValue: 33
               },
               {
-                  measurementId: 13,
-                  measurementName: "name2",
-                  measurementDescription: "desc2",
+                  measurementId: 24,
+                  measurementName: "name3a",
+                  measurementDescription: "desc3a",
                   measurementValue: 33
             }]
         }
@@ -115,7 +139,7 @@ var setupGMA = function( username, password ) {
 var updateCampus = function(campus, name) {
     var dfd = $.Deferred();
     NSServerCampusTrans.findOne({
-        id: campus.id,
+        campus_id: campus.id,
         language_code: 'en'
     })
     .then(function(trans){
@@ -129,8 +153,10 @@ var updateCampus = function(campus, name) {
                 }
                 
             });
-        } else {
+        } else if (trans) {
             dfd.resolve();
+        } else {
+            dfd.reject("Data error:  Translation Entry not found");
         }
     })
     .fail(function(err){
@@ -147,6 +173,7 @@ var createCampus = function(gmaId, name) {
     })
     .then(function(campus){
         campus.addTranslation({
+            campus_id: campus.id,
             language_code: 'en',
             short_name: name
         })
@@ -198,12 +225,12 @@ var processNode = function(gmaId, name) {
 
 var syncNodeData = function(nodes) {
     var dfd = $.Deferred();
-    // assume all new
+
     var numDone = 0;
     var numToDo = 0;
     
     for (var id in nodes){
-        processNode(id, nodes[id].name)
+        processNode(id, nodes[id])
         .then(function(){
             numDone++;
             if (numDone == numToDo){
@@ -227,7 +254,7 @@ var addUserToCampus = function(userUUID, campus) {
     .then(function(userCampus){
         if (!userCampus){
             // Need to create one
-            NSServerUserCampus.findOne({
+            NSServerUserCampus.create({
                 user_UUID: userUUID,
                 campus_UUID: campus.UUID
             })
@@ -251,7 +278,7 @@ var addUserToCampus = function(userUUID, campus) {
 
 var addUserToNodes = function(userUUID, nodes) {
     var dfd = $.Deferred();
-    // assume all new
+
     var numDone = 0;
     var numToDo = 0;
     
@@ -307,17 +334,52 @@ var syncAssignments = function( assignments, userUUID ) {
     return dfd;
 };
 
-
-
-var syncMeasurements = function( measurements ) {
+var updateStep = function(step, measurement) {
     var dfd = $.Deferred();
-    console.log('getting measurements ');
-    
-    // Make sure our tables match the latest from GMA
-/*    syncMeasurementData(gma.measurements)
-    .then(function(){
-        // Update User-Node assignments
-        addUserToNodes(userUUID, gma.a)
+    NSServerStepsTrans.findOne({
+        step_id: step.id,
+        language_code: 'en'
+    })
+    .then(function(trans){
+        if (trans 
+            && (   (trans.name != measurement.measurementName)
+                || (trans.description != measurement.measurementDescription)) ){
+            trans.name = measurement.measurementName;
+            trans.description = measurement.measurementDescription;
+            trans.save(function(err){
+                if (err){
+                    dfd.reject(err);
+                } else {
+                    dfd.resolve();
+                }
+                
+            });
+        } else if (trans) {
+            dfd.resolve();
+        } else {
+            dfd.reject("Data error:  Translation Entry not found");
+        }
+    })
+    .fail(function(err){
+        dfd.reject(err);
+    });
+    return dfd;
+};
+
+var createStep = function(campusUUID, measurement) {
+    var dfd = $.Deferred();
+    NSServerSteps.create({
+        UUID: ADCore.util.createUUID(),
+        campus_UUID: campusUUID,
+        measurement_id: measurement.measurementId
+    })
+    .then(function(step){
+        step.addTranslation({
+            step_id: step.id,
+            language_code: 'en',
+            name: measurement.measurementName,
+            description: measurement.measurementDescription
+        })
         .then(function(){
             dfd.resolve();
         })
@@ -328,7 +390,116 @@ var syncMeasurements = function( measurements ) {
     .fail(function(err){
         dfd.reject(err);
     });
-*/
+    return dfd;
+};
+
+var processMeasurement = function(campusUUID, measurement) {
+    var dfd = $.Deferred();
+    NSServerSteps.findOne({
+        campus_UUID: campusUUID,
+        measurement_id: measurement.measurementId
+    })
+    .then(function(step){
+        if (step){
+            // Update the step
+            updateStep(step, measurement)
+            .then(function(){
+                dfd.resolve();
+            })
+            .fail(function(err){
+                dfd.reject(err);
+            });
+        } else {
+            // Create the step
+            createStep(campusUUID, measurement)
+            .then(function(){
+                dfd.resolve();
+            })
+            .fail(function(err){
+                dfd.reject(err);
+            });
+        }
+    })
+    .fail(function(err){
+        dfd.reject(err);
+    });
+    
+    return dfd;
+
+};
+
+var processNodeMeasurements = function(nodeId, measurements) {
+    var dfd = $.Deferred();
+
+    // Find the campus
+    NSServerCampus.findOne({
+        node_id: nodeId
+    })
+    .then(function(campus){
+        if (campus){
+            var numDone = 0;
+            var numToDo = 0;
+            
+            for (var id in measurements){
+                processMeasurement(campus.UUID, measurements[id])
+                .then(function(){
+                    numDone++;
+                    if (numDone == numToDo){
+                        dfd.resolve();
+                    }
+                })
+                .fail(function(err){
+                    dfd.reject(err);
+                });
+                numToDo++;
+            }
+        } else {
+            dfd.reject("Data error:  Campus not found");
+        }
+    })
+    .fail(function(err){
+        dfd.reject(err);
+    });
+
+    return dfd;
+
+};
+
+var syncMeasurementData = function(measurements) {
+    var dfd = $.Deferred();
+
+    var numDone = 0;
+    var numToDo = 0;
+    
+    for (var nodeId in measurements){
+        processNodeMeasurements(nodeId, measurements[nodeId])
+        .then(function(){
+            numDone++;
+            if (numDone == numToDo){
+                dfd.resolve();
+            }
+        })
+        .fail(function(err){
+            dfd.reject(err);
+        });
+        numToDo++;
+    }
+    return dfd;
+};
+
+var syncMeasurements = function( measurements ) {
+    var dfd = $.Deferred();
+    console.log('getting measurements ');
+    
+    // Make sure our tables match the latest from GMA
+    syncMeasurementData(measurements)
+    .then(function(){
+        dfd.resolve();
+    })
+    .fail(function(err){
+        dfd.reject(err);
+    });
+
     /*
     2. gma.getMeasurement()
 
@@ -342,7 +513,6 @@ var syncMeasurements = function( measurements ) {
             -> TransactionLog [user_uuid, timestamp, ….]
 
      */
-    dfd.resolve();
 
     return dfd;
 };

@@ -6,6 +6,7 @@
  *                 in this model.
  * @docs		:: http://sailsjs.org/#!documentation/models
  */
+var $ = require('jquery');
 
 module.exports = {
 

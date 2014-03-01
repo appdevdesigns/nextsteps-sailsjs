@@ -16,9 +16,8 @@ module.exports = {
         nickname: 'string'
         */
         
-        uuid	: 'STRING',
-
-
+        step_id         : 'INTEGER',
+        
         language_code	: 'STRING',
 
 

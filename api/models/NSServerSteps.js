@@ -6,6 +6,7 @@
  *                 See also NSServerStepsTrans for translation strings related to this model.
  * @docs		:: http://sailsjs.org/#!documentation/models
  */
+var $ = require('jquery');
 
 module.exports = {
 
@@ -22,6 +23,51 @@ module.exports = {
          campus_UUID   : 'STRING',
 
          measurement_id	: 'STRING',
+
+         addTranslation: function(transEntry, cb) {
+             var dfd = $.Deferred();
+             transEntry.step_id = this.id;
+             NSServerStepsTrans.create(transEntry)
+             .then(function(obj){
+                 if (cb) {
+                     cb(null);
+                 }
+                 dfd.resolve();
+             })
+             .fail(function(err){
+                 if (cb) {
+                     cb(err);
+                 }
+                 dfd.reject(err);
+             });
+             return dfd;
+         },
+
+         trans:function(lang, cb) {
+             // find the translations for this entry.
+             // the translations will be stored in a this.translations {} object
+             // trans('en', function(err, list) {})
+             //
+
+             var self = this;
+             if (typeof cb == 'undefined') {
+                 cb = lang;
+                 lang = 'en';
+             }
+
+             NSServerStepsTrans.find({step_id:this.id,language_code:lang})
+             .then(function(listTrans){
+                 var thisTrans = {};
+                 for (var lt=0; lt<listTrans.length; lt++) {
+                     thisTrans[listTrans[lt].language_code] = listTrans[lt];
+                 }
+                 self.translations = thisTrans;
+                 cb(null, listTrans[0]);
+             })
+             .fail(function(err){
+                 cb(err);
+             });
+         },
 
          campus: function(cb) {
              dfd = $.Deferred();
