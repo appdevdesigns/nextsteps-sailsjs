@@ -6,6 +6,7 @@
  *                 See also NSServerCampusTrans for translation strings associated with campuses.
  * @docs		:: http://sailsjs.org/#!documentation/models
  */
+var $ = require('jquery');
 
 module.exports = {
 
@@ -75,8 +76,8 @@ module.exports = {
         if (typeof cb == 'undefined') {
             if (typeof filter == 'function') {
                 cb = filter;
+                filter = {};
             }
-            filter = {};
         }
 
         filter = filter || {};

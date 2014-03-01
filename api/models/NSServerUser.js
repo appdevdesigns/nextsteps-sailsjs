@@ -5,6 +5,7 @@
  * @description :: A list of users associating the user's NextSteps UUID with CAS GUID.
  * @docs		:: http://sailsjs.org/#!documentation/models
  */
+var $ = require('jquery');
 
 module.exports = {
 
