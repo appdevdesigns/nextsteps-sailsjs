@@ -13,17 +13,15 @@ module.exports = {
 
     attributes: {
 
-        /* e.g.
-        nickname: 'string'
-        */
-
-        UUID	: 'STRING',
+        
+        user_uuid	: 'STRING',
 
 
-        GUID	: 'STRING',
-
-        default_lang: 'STRING',
-
+        user_guid	: 'STRING',
+        
+ 
+        default_lang : 'STRING',
+        
 
         campuses: function(filter, cb) {
 
@@ -39,7 +37,7 @@ module.exports = {
             filter = filter || {};
 
             //
-            DBHelper.manyThrough(NSServerUserCampus, {user_UUID:this.UUID}, NSServerCampus, 'campus_UUID', 'UUID', filter)
+            DBHelper.manyThrough(NSServerUserCampus, {user_uuid:this.user_uuid}, NSServerCampus, 'campus_uuid', 'campus_uuid', filter)
             .then(function(listCampuses) {
 
                 // now tell the campuses to translate themselves
@@ -67,6 +65,7 @@ module.exports = {
             });
 
             return dfd;
+<<<<<<< Updated upstream
         },
 
     
@@ -92,5 +91,57 @@ module.exports = {
         }
 
     }// attributes
+=======
+ 
+    }, // attributes
+
+
+
+    addCampus: function(campusObj, cb) {
+        var dfd = $.Deferred();
+        NSServerUserCampus.create({
+            campus_uuid: campusObj.campus_uuid,
+            user_uuid: this.user_uuid
+        })
+        .then(function(obj){
+            if (cb) {
+                cb(null);
+            }
+            dfd.resolve();
+        })
+        .fail(function(err){
+            if (cb) {
+                cb(err);
+            }
+            dfd.reject(err);
+        });
+        return dfd;
+    },
+
+
+
+    addTransaction: function(transaction, cb) {
+        var dfd = $.Deferred();
+        NSServerTransactionLog.create({
+            user_uuid: this.user_uuid,
+            transaction: transaction
+        })
+        .then(function(obj){
+            if (cb) {
+                cb(null);
+            }
+            dfd.resolve();
+        })
+        .fail(function(err){
+            if (cb) {
+                cb(err);
+            }
+            dfd.reject(err);
+        });
+        return dfd;
+    }
+
+  }
+>>>>>>> Stashed changes
 
 };

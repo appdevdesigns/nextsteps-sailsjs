@@ -14,20 +14,18 @@ module.exports = {
 
     attributes: {
   	
-        /* e.g.
-        nickname: 'string'
-        */
         
-        user_UUID	: 'STRING',
+        user_uuid	: 'STRING',
 
 
-        step_UUID	: 'STRING'
+        step_uuid	: 'STRING'
     },
     
+    // Returns a user object related to this instance
     user: function(cb) {
         var dfd = $.Deferred();
         NSServerUser.findOne({
-            UUID: this.user_UUID
+            user_uuid: this.user_uuid
         })
         .then(function(user) {
             if (cb) {
@@ -43,6 +41,6 @@ module.exports = {
         });
         
         return dfd;
-    },
+    }
 
 };

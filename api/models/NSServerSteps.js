@@ -2,7 +2,7 @@
  * NSServerSteps
  *
  * @module      :: Model NSServerSteps
- * @description :: List of known steps. The measurement_UUID field corresponds to the GMA measurement id.
+ * @description :: List of known steps. The measurement_id field corresponds to the GMA measurement id.
  *                 See also NSServerStepsTrans for translation strings related to this model.
  * @docs		:: http://sailsjs.org/#!documentation/models
  */
@@ -13,14 +13,10 @@ module.exports = {
     tableName: 'nextsteps_steps',
 
     attributes: {
-  	
-    	  /* e.g.
-    	  nickname: 'string'
-    	  */
-    
-         UUID	: 'STRING',
+  	    
+         step_uuid	: 'STRING',
 
-         campus_UUID   : 'STRING',
+         campus_uuid   : 'STRING',
 
          measurement_id	: 'STRING',
 
@@ -105,7 +101,7 @@ module.exports = {
              var dfd = $.Deferred();
              if (!this.isPersonal()) {
                  NSServerCampus.findOne({
-                     UUID: this.campus_UUID
+                     compus_uuid: this.campus_uuid
                  })
                  .then(function(campus) {
                      if (cb) {
@@ -127,7 +123,7 @@ module.exports = {
          },
          
          isPersonal: function() {
-             return (this.campus_UUID == null);
+             return (this.campus_uuid == null);
          },
          
          // Get list of user objects associated with this step

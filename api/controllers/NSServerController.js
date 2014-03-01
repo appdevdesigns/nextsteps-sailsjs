@@ -52,7 +52,7 @@ module.exports = {
 
       var log = req.appdev.transactionLog;
       ADCore.comm.success(res, {
-          "lastSyncTimestamp": req.appdev.timestamp,
+          "lastSyncTimestamp": Date.now(),
           "transactionLog":log
         });
 

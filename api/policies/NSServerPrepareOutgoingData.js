@@ -46,7 +46,8 @@ module.exports = function(req, res, next) {
  
     NSServerTransactionLog.getLogForUser(userId, lastTime, function(err, data){
         if (err) {
-            console.log(err);
+            // exit policy chain w/o calling next();
+            ADCore.comm.error(res, 'Failed to obtain transaction log, ' + err); 
         }
         else {
             req.appdev.transactionLog = data;    

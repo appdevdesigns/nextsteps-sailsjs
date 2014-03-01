@@ -12,16 +12,13 @@ module.exports = {
 
     attributes: {
 
-        user_UUID	: 'STRING',
+        user_uuid	: 'STRING',
 
-/*  Using updatedAt field rather than a timestamp.
-    timestamp	: 'DATETIME',
-    */
-
-
+//  NOTE: We use updatedAt field rather than a timestamp.
+//      timestamp	: 'DATETIME',
+// 
         transaction	: 'JSON'
         
-
     },
 
     //  Retrieve a list of transactions for a given user after a specified timestamp.
@@ -36,7 +33,7 @@ module.exports = {
             console.log('Error: NSServerTransactionLog::getLogForUser - no callback provided')
             return;
         }
-        NSServerTransactionLog.find({user_UUID:userId}).where({updatedAt:{'>=':timestamp}})
+        NSServerTransactionLog.find({user_uuid:userId}).where({updatedAt:{'>=':timestamp}})
         .then(function (logObjs){
             var userLog = []; // returned list of transactions for a user.
             for (var t = 0; t < logObjs.length; t++) {

@@ -12,12 +12,11 @@ module.exports = {
 
     attributes: {
 
-        /* e.g.nickname: 'string' */    
-
         campus_id       : 'INTEGER',
         
         language_code	: 'STRING',
 
+<<<<<<< Updated upstream
 
         short_name	: 'STRING',
 
@@ -40,6 +39,12 @@ module.exports = {
     afterUpdate: function(entry, cb) {
         // same as after create
         NSServerCampusTrans.afterCreate(entry, cb);
+=======
+        campus_label    : 'STRING',
+        
+        long_name       : 'STRING'
+            
+>>>>>>> Stashed changes
     }
 
 
