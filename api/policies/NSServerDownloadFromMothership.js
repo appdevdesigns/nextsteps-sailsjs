@@ -71,7 +71,7 @@ var updateCampus = function(campus, name) {
 
     NSServerCampusTrans.findOne({
         campus_id: campus.id,
-        language_code: ADCore.user.current.getLanguageCode()
+        language_code: ADCore.user.current().getLanguageCode()
     })
     .then(function(trans){
         if (trans && (name != trans.campus_label)){
@@ -108,7 +108,7 @@ var createCampus = function(gmaId, name) {
     .then(function(campus){
         campus.addTranslation({
             campus_id: campus.id,
-            language_code: ADCore.user.current.getLanguageCode(),
+            language_code: ADCore.user.current().getLanguageCode(),
             campus_label: name
         })
         .then(function(){
@@ -344,7 +344,7 @@ var updateStep = function(step, measurement) {
     var dfd = $.Deferred();
     NSServerStepsTrans.findOne({
         step_id: step.id,
-        language_code: ADCore.user.current.getLanguageCode()
+        language_code: ADCore.user.current().getLanguageCode()
     })
     .then(function(trans){
         if (trans
@@ -384,7 +384,7 @@ var createStep = function(campusUUID, measurement) {
     .then(function(step){
         step.addTranslation({
             step_id: step.id,
-            language_code: ADCore.user.current.getLanguageCode(),
+            language_code: ADCore.user.current().getLanguageCode(),
             step_label: measurement.measurementName,
             step_description: measurement.measurementDescription
         })
