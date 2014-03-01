@@ -25,6 +25,24 @@ module.exports = {
 
 
         description	: 'STRING'
+    },
+    
+    // Life cycle callbacks
+    afterCreate: function(newEntry, cb) {
+        // Tell the campus there's an update
+        NSServerSteps.findOne(newEntry.step_id)
+        .then(function(step){
+            NSServerSteps.afterUpdate(step, cb);
+        })
+        .fail(function(err){
+            cb(err);
+        });
+    },
+    
+    afterUpdate: function(entry, cb) {
+        // same as after create
+        NSServerStepsTrans.afterCreate(entry, cb);
     }
+
 
 };

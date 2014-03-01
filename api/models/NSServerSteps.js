@@ -24,6 +24,38 @@ module.exports = {
 
          measurement_id	: 'STRING',
 
+         // Generate transaction entry
+         transaction: function(operation, lang, cb) {
+             var dfd = $.Deferred();
+             var xEntry = {  'operation': operation,
+                             'model': 'Step',
+                             'params': {
+                                 'uuid': this.UUID,
+                                 'campus_uuid': this.campus_UUID
+                             } };
+             if (operation != "destroy") {
+                 // Look up the translation
+                 this.trans(lang, function(err, transEntry){
+                     if (err) {
+                         if (cb) {
+                             cb(err);
+                         }
+                         dfd.reject(err);
+                     } else {
+                         $.extend(xEntry.params, transEntry);
+                         if (cb) {
+                             cb(xEntry);
+                         }
+                         dfd.resolve(xEntry);
+                     }
+                 });
+             } else {
+                 // Nothing more to do
+                 dfd.resolve(xEntry);
+             }
+             return dfd;
+         },
+         
          addTranslation: function(transEntry, cb) {
              var dfd = $.Deferred();
              transEntry.step_id = this.id;
@@ -70,7 +102,7 @@ module.exports = {
          },
 
          campus: function(cb) {
-             dfd = $.Deferred();
+             var dfd = $.Deferred();
              if (!this.isPersonal()) {
                  NSServerCampus.findOne({
                      UUID: this.campus_UUID
@@ -101,37 +133,18 @@ module.exports = {
          // Get list of user objects associated with this step
          // Handles both personal steps and campus steps
          users: function(cb) {
-             dfd = $.Deferred();
+             var dfd = $.Deferred();
+             var self = this;
+             
              if (this.isPersonal()) {
                  // A Personal step; get the user UUIDs
-                 NSServerUserSteps.find({
-                     step_UUID: this.UUID
-                 })
-                 .then(function(userSteps) {
-                     // Now get the user objects
-                     var userObjs = [];
-                     var numDone = 0;
-                     var numToDo = 0;
-                     for (var i in userSteps){
-                         userSteps[i].user()
-                         .then(function(user){
-                             userObjs.push(user);
-                             numDone++;
-                             if (numDone == numToDo){
-                                 // All done
-                                 if (cb) {
-                                     cb(null, userObjs);
-                                 }
-                                 dfd.resolve(userObjs);
-                             }
-                         })
-                         .fail(function(err){
-                             if (cb) {
-                                 cb(err);
-                             }
-                             dfd.reject(err);
-                         });
+                 getPersonalStepUsers(this)
+                 .then(function(users){
+                     // All done
+                     if (cb) {
+                         cb(null, users);
                      }
+                     dfd.resolve(users);
                  })
                  .fail(function(err){
                      if (cb) {
@@ -140,24 +153,14 @@ module.exports = {
                      dfd.reject(err);
                  });
              } else {
-                 // A campus step; get the campus object
-                 this.campus()
-                 .then(function(campus){
-                     // Now get the user objects
-                     campus.users()
-                     .then(function(userObjs){
-                         // All done
-                         if (cb) {
-                             cb(null, userObjs);
-                         }
-                         dfd.resolve(userObjs);
-                     })
-                     .fail(function(err){
-                         if (cb) {
-                             cb(err);
-                         }
-                         dfd.reject(err);
-                     });
+                 // A campus step; get the campus users
+                 getCampusStepUsers(this)
+                 .then(function(userObjs){
+                     // All done
+                     if (cb) {
+                         cb(null, userObjs);
+                     }
+                     dfd.resolve(userObjs);
                  })
                  .fail(function(err){
                      if (cb) {
@@ -170,6 +173,119 @@ module.exports = {
              return dfd;
          }
 
+    },
+    
+    // Life cycle callbacks
+    afterCreate: function(newEntry, cb) {
+        createTransaction(newEntry.id, 'create')
+        .then(function(){
+            cb(null);
+        })
+        .fail(function(err){
+            cb(err);
+        });
+    },
+    
+    afterUpdate: function(entry, cb) {
+        createTransaction(entry.id, 'update')
+        .then(function(){
+            cb(null);
+        })
+        .fail(function(err){
+            cb(err);
+        });
     }
+};
 
+var getPersonalStepUsers = function(step) {
+    var dfd = $.Deferred();
+    // A Personal step; get the user UUIDs
+    NSServerUserSteps.find({
+        step_UUID: step.UUID
+    })
+    .then(function(userSteps) {
+        // Now get the user objects
+        var userObjs = [];
+        var numDone = 0;
+        var numToDo = 0;
+        userSteps.forEach(function(userStep){
+            userStep.user()
+            .then(function(user){
+                userObjs.push(user);
+                numDone++;
+                if (numDone == numToDo){
+                    // All done
+                    dfd.resolve(userObjs);
+                }
+            })
+            .fail(function(err){
+                dfd.reject(err);
+            });
+            numToDo++;
+        });
+        if (numToDo == 0){
+            cb(null);
+        }
+    })
+    .fail(function(err){
+        dfd.reject(err);
+    });
+    return dfd;
+};
+
+var getCampusStepUsers = function(step) {
+    var dfd = $.Deferred();
+    // A campus step; get the campus object
+    step.campus()
+    .then(function(campus){
+        // Now get the user objects
+        campus.users()
+        .then(function(userObjs){
+            dfd.resolve(userObjs);
+        })
+        .fail(function(err){
+            dfd.reject(err);
+        });
+    })
+    .fail(function(err){
+        dfd.reject(err);
+    });
+    return dfd;
+};
+
+var createTransaction = function(id, operation){
+    var dfd = $.Deferred();
+    // Get an instance
+    NSServerSteps.findOne(id)
+    .then(function(step){
+        // Notify all users
+        step.users()
+        .then(function(users){
+            var numDone = 0;
+            var numToDo = 0;
+            users.forEach(function(user){
+                DBHelper.addTransaction(operation, step, user)
+                .then(function(){
+                    numDone++;
+                    if (numDone == numToDo){
+                        dfd.resolve();
+                    }
+                })
+                .fail(function(err){
+                    dfd.reject(err);
+                });
+                numToDo++;
+            });
+            if (numToDo == 0){
+                dfd.resolve();
+            }
+        })
+        .fail(function(err){
+            dfd.reject(err);
+        });
+    })
+    .fail(function(err){
+        dfd.reject(err);
+    });
+    return dfd;
 };
