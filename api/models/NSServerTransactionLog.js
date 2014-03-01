@@ -11,10 +11,6 @@ module.exports = {
     tableName: 'nextsteps_transaction_log',
 
     attributes: {
-  	
-        /* e.g.
-        nickname: 'string'
-         */
 
         user_UUID	: 'STRING',
 
@@ -32,14 +28,15 @@ module.exports = {
     getLogForUser : function(userId, timestamp, cb) {
                 
         if ( (undefined == userId) || (undefined == timestamp) ) {
-            console.log('Error: NSServerTransactionLog::getLogForUser - Invalid parameter');
+            var err = new Error('Error: NSServerTransactionLog::getLogForUser - Invalid parameter');
+            cb(err);
             return;
         }
         if ( undefined == cb ) {
             console.log('Error: NSServerTransactionLog::getLogForUser - no callback provided')
             return;
         }
-        NSServerTransactionLog.find({user_UUID:userId}).where({updatedAt:{'>=':timestamp}})
+        NSServerTransactionLog.find({user_uuid:userId}).where({updatedAt:{'>=':timestamp}})
         .then(function (logObjs){
             var userLog = []; // returned list of transactions for a user.
             for (var t = 0; t < logObjs.length; t++) {
