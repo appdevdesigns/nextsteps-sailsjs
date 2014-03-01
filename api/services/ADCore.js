@@ -196,7 +196,8 @@ module.exports = {
 
 //// TODO: implement the authentication so we can have a user object.
             return {
-                    hasPermission:function() {return true;}
+                    hasPermission:function() {return true;},
+                    getLanguageCode:function() {return 'en';}
             };
         },
 
@@ -215,8 +216,9 @@ module.exports = {
 //            return req.session.appdev.actualUser;
 //// TODO: implement the authentication so we can have a user object.
             return {
-                    hasPermission:function() {return true;}
-            };
+                    hasPermission:function() {return true;},
+                    getLanguageCode:function() {return 'en';}
+           };
         }
     },
     
