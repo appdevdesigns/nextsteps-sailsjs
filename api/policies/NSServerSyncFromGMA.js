@@ -20,7 +20,6 @@ module.exports = function(req, res, next) {
     if (true || config.gma) {
         var userID = req.param('username');
         var password = req.param('password');
-        req.appdev.userUUID = 'UUID';
         // setupGMA
         setupGMA(userID, password)
         .then(function(gma){
@@ -44,8 +43,7 @@ module.exports = function(req, res, next) {
                           measurementDescription: "desc1b",
                           measurementValue: 33
                       }];
-                req.appdev.userUUID = 'UUID2';
-
+ 
             }
 console.log('GMA setup done...');
             // GMA data retrieved; now make sure we're in sync
@@ -143,8 +141,8 @@ var updateCampus = function(campus, name) {
         language_code: 'en'
     })
     .then(function(trans){
-        if (trans && (name != trans.short_name)){
-            trans.short_name = name;
+        if (trans && (name != trans.campus_label)){
+            trans.campus_label = name;
             trans.save(function(err){
                 if (err){
                     dfd.reject(err);
@@ -168,14 +166,14 @@ var updateCampus = function(campus, name) {
 var createCampus = function(gmaId, name) {
     var dfd = $.Deferred();
     NSServerCampus.create({
-        UUID: ADCore.util.createUUID(),
-        node_id: gmaId,
+        campus_uuid: ADCore.util.createUUID(),
+        node_id: gmaId
     })
     .then(function(campus){
         campus.addTranslation({
             campus_id: campus.id,
             language_code: 'en',
-            short_name: name
+            campus_label: name
         })
         .then(function(){
             dfd.resolve();
@@ -248,15 +246,15 @@ var syncNodeData = function(nodes) {
 var addUserToCampus = function(userUUID, campus) {
     var dfd = $.Deferred();
     NSServerUserCampus.findOne({
-        user_UUID: userUUID,
-        campus_UUID: campus.UUID
+        user_uuid: userUUID,
+        campus_uuid: campus.campus_uuid
     })
     .then(function(userCampus){
         if (!userCampus){
             // Need to create one
             NSServerUserCampus.create({
-                user_UUID: userUUID,
-                campus_UUID: campus.UUID
+                user_uuid: userUUID,
+                campus_uuid: campus.campus_uuid
             })
             .then(function(){
                 dfd.resolve();
@@ -369,16 +367,16 @@ var updateStep = function(step, measurement) {
 var createStep = function(campusUUID, measurement) {
     var dfd = $.Deferred();
     NSServerSteps.create({
-        UUID: ADCore.util.createUUID(),
-        campus_UUID: campusUUID,
+        step_uuid: ADCore.util.createUUID(),
+        campus_uuid: campusUUID,
         measurement_id: measurement.measurementId
     })
     .then(function(step){
         step.addTranslation({
             step_id: step.id,
             language_code: 'en',
-            name: measurement.measurementName,
-            description: measurement.measurementDescription
+            step_label: measurement.measurementName,
+            step_description: measurement.measurementDescription
         })
         .then(function(){
             dfd.resolve();
@@ -396,7 +394,7 @@ var createStep = function(campusUUID, measurement) {
 var processMeasurement = function(campusUUID, measurement) {
     var dfd = $.Deferred();
     NSServerSteps.findOne({
-        campus_UUID: campusUUID,
+        campus_uuid: campusUUID,
         measurement_id: measurement.measurementId
     })
     .then(function(step){
@@ -441,7 +439,7 @@ var processNodeMeasurements = function(nodeId, measurements) {
             var numToDo = 0;
             
             for (var id in measurements){
-                processMeasurement(campus.UUID, measurements[id])
+                processMeasurement(campus.campus_uuid, measurements[id])
                 .then(function(){
                     numDone++;
                     if (numDone == numToDo){

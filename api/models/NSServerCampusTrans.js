@@ -12,19 +12,15 @@ module.exports = {
 
     attributes: {
 
-        /* e.g.nickname: 'string' */    
-
         campus_id       : 'INTEGER',
-        
+
         language_code	: 'STRING',
 
-
-        short_name	: 'STRING',
-
+        campus_label	: 'STRING',
 
         long_name	: 'STRING'
     },
-    
+
     // Life cycle callbacks
     afterCreate: function(newEntry, cb) {
         // Tell the campus there's an update
@@ -36,11 +32,10 @@ module.exports = {
             cb(err);
         });
     },
-    
+
     afterUpdate: function(entry, cb) {
         // same as after create
         NSServerCampusTrans.afterCreate(entry, cb);
     }
-
 
 };
