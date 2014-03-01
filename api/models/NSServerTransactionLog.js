@@ -36,7 +36,7 @@ module.exports = {
             console.log('Error: NSServerTransactionLog::getLogForUser - no callback provided')
             return;
         }
-        NSServerTransactionLog.find({user_uuid:userId}).where({updatedAt:{'>=':timestamp}})
+        NSServerTransactionLog.find({user_UUID:userId}).where({updatedAt:{'>=':timestamp}})
         .then(function (logObjs){
             var userLog = []; // returned list of transactions for a user.
             for (var t = 0; t < logObjs.length; t++) {
