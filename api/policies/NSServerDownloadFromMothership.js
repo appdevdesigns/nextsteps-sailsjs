@@ -264,14 +264,25 @@ var addUserToNodes = function(userUUID, nodes) {
     return dfd;
 };
 
+var getCampusesForUser = function(userUUID) {
+    var dfd = $.Deferred();
+    DBHelper.manyThrough(NSServerUserCampus, {user_uuid:userUUID}, NSServerCampus, 'campus_uuid', 'campus_uuid', {})
+    .then(function(listCampuses) {
+        dfd.resolve(listCampuses);
+    })
+    .fail(function(err){
+        dfd.reject(err);
+    });
+    return dfd;
+};
+
 
 var removeUserFromNodes = function(userUUID, assignments) {
     var dfd = $.Deferred();
-    
-    NSServerUserCampus.campusesForUser(userUUID)
+    getCampusesForUser(userUUID)
     .then(function(campuses){
         var numDone = 0;
-        var numToDo = 0;
+        var numToDo = campuses.length;
         campuses.forEach(function(campus){
             var nodeId = campus.node_id;
             if (typeof (assignments[nodeId]) == 'undefined') {
@@ -283,6 +294,9 @@ var removeUserFromNodes = function(userUUID, assignments) {
                 })
                 .then(function(){
                     numDone++;
+                    if (numDone == numToDo) {
+                        dfd.resolve();
+                    }
                 })
                 .fail(function(err){
                     dfd.reject(err);
@@ -290,13 +304,8 @@ var removeUserFromNodes = function(userUUID, assignments) {
             } else {
                 numDone++;
             }
-            numToDo++;
-            
-            if (numDone == numToDo) {
-                dfd.resolve();
-            }
         });
-        if (numToDo == 0) {
+        if (numDone == numToDo) {
             dfd.resolve();
         }
     })
@@ -305,7 +314,7 @@ var removeUserFromNodes = function(userUUID, assignments) {
     });
 
     return dfd;
-}
+};
 
 
 
@@ -348,10 +357,10 @@ var updateStep = function(step, measurement) {
     })
     .then(function(trans){
         if (trans
-            && (   (trans.name != measurement.measurementName)
-                || (trans.description != measurement.measurementDescription)) ){
-            trans.name = measurement.measurementName;
-            trans.description = measurement.measurementDescription;
+            && (   (trans.step_label != measurement.measurementName)
+                || (trans.step_description != measurement.measurementDescription)) ){
+            trans.step_label = measurement.measurementName;
+            trans.step_description = measurement.measurementDescription;
             trans.save(function(err){
                 if (err){
                     dfd.reject(err);
@@ -443,7 +452,6 @@ var processMeasurement = function(campusUUID, measurement) {
 
 var processNodeMeasurements = function(nodeId, measurements) {
     var dfd = $.Deferred();
-
     if (measurements.length>0) {
 
         // Find the campus
@@ -468,6 +476,11 @@ var processNodeMeasurements = function(nodeId, measurements) {
                     });
                     numToDo++;
                 }
+                if (numToDo == 0) {
+                    dfd.resolve();
+                }
+            } else {
+                dfd.resolve();
             }
         })
         .fail(function(err){
@@ -491,7 +504,6 @@ var processNodeMeasurements = function(nodeId, measurements) {
 
 var syncMeasurementData = function(measurements) {
     var dfd = $.Deferred();
-
     var numDone = 0;
     var numToDo = 0;
 
@@ -507,6 +519,9 @@ var syncMeasurementData = function(measurements) {
         .fail(function(err){
             dfd.reject(err);
         });
+    }
+    if (numToDo == 0){
+        dfd.resolve();
     }
 
     return dfd;

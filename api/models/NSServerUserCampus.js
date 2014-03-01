@@ -19,35 +19,6 @@ module.exports = {
 
     },
     
-    campusesForUser: function(userUUID, filter, cb) {
-        var dfd = $.Deferred();
-
-        if (typeof cb == 'undefined') {
-            if (typeof filter == 'function') {
-                cb = filter;
-                filter = {};
-            }
-        }
-
-        filter = filter || {};
-        DBHelper.manyThrough(NSServerUserCampus, {user_uuid:userUUID}, NSServerCampus, 'campus_uuid', 'campus_uuid', filter)
-        .then(function(listCampuses) {
-            if (cb) {
-                cb(null, listCampuses);
-            }
-            dfd.resolve(listCampuses);
-        })
-        .fail(function(err){
-            if (cb) {
-                cb(err);
-            }
-            dfd.reject(err);
-        });
-        return dfd;
-
-    }, 
-
-
     // Life cycle callbacks
     afterCreate: function(newEntry, cb) {
         // Get the campus and user
