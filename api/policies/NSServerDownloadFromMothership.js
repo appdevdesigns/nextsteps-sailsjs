@@ -26,6 +26,7 @@ module.exports = function(req, res, next) {
 
     if (externalSystems[sails.config.nsserver.externalSystem]) {
 
+
         externalSystems[sails.config.nsserver.externalSystem](req,res)
         .fail(function(err){
             ADCore.comm.error(res, err);
@@ -73,8 +74,8 @@ var updateCampus = function(campus, name) {
         language_code: 'en'
     })
     .then(function(trans){
-        if (trans && (name != trans.short_name)){
-            trans.short_name = name;
+        if (trans && (name != trans.campus_label)){
+            trans.campus_label = name;
             trans.save(function(err){
                 if (err){
                     dfd.reject(err);
@@ -101,14 +102,14 @@ var createCampus = function(gmaId, name) {
     var dfd = $.Deferred();
 
     NSServerCampus.create({
-        UUID: ADCore.util.createUUID(),
-        node_id: gmaId,
+        campus_uuid: ADCore.util.createUUID(),
+        node_id: gmaId
     })
     .then(function(campus){
         campus.addTranslation({
             campus_id: campus.id,
             language_code: 'en',
-            short_name: name
+            campus_label: name
         })
         .then(function(){
             dfd.resolve();
@@ -194,15 +195,15 @@ var syncNodeData = function(nodes) {
 var addUserToCampus = function(userUUID, campus) {
     var dfd = $.Deferred();
     NSServerUserCampus.findOne({
-        user_UUID: userUUID,
-        campus_UUID: campus.UUID
+        user_uuid: userUUID,
+        campus_uuid: campus.campus_uuid
     })
     .then(function(userCampus){
         if (!userCampus){
             // Need to create one
             NSServerUserCampus.create({
-                user_UUID: userUUID,
-                campus_UUID: campus.UUID
+                user_uuid: userUUID,
+                campus_uuid: campus.campus_uuid
             })
             .then(function(){
                 dfd.resolve();
@@ -324,16 +325,16 @@ var updateStep = function(step, measurement) {
 var createStep = function(campusUUID, measurement) {
     var dfd = $.Deferred();
     NSServerSteps.create({
-        UUID: ADCore.util.createUUID(),
-        campus_UUID: campusUUID,
+        step_uuid: ADCore.util.createUUID(),
+        campus_uuid: campusUUID,
         measurement_id: measurement.measurementId
     })
     .then(function(step){
         step.addTranslation({
             step_id: step.id,
             language_code: 'en',
-            name: measurement.measurementName,
-            description: measurement.measurementDescription
+            step_label: measurement.measurementName,
+            step_description: measurement.measurementDescription
         })
         .then(function(){
             dfd.resolve();
@@ -354,7 +355,7 @@ var processMeasurement = function(campusUUID, measurement) {
     var dfd = $.Deferred();
 
     NSServerSteps.findOne({
-        campus_UUID: campusUUID,
+        campus_uuid: campusUUID,
         measurement_id: measurement.measurementId
     })
     .then(function(step){
@@ -391,9 +392,7 @@ var processMeasurement = function(campusUUID, measurement) {
 var processNodeMeasurements = function(nodeId, measurements) {
     var dfd = $.Deferred();
 
-    // only process if there are some measurements to do
-    if (measurements.length > 0) {
-
+    if (measurements.length>0) {
 
         // Find the campus
         NSServerCampus.findOne({
@@ -405,28 +404,22 @@ var processNodeMeasurements = function(nodeId, measurements) {
                 var numToDo = 0;
 
                 for (var id in measurements){
-
-
-                        processMeasurement(campus.UUID, measurements[id])
-                        .then(function(){
-                            numDone++;
-                            if (numDone == numToDo){
-                                dfd.resolve();
-                            }
-                        })
-                        .fail(function(err){
-                            dfd.reject(err);
-                        });
-                        numToDo++;
-
+                    processMeasurement(campus.campus_uuid, measurements[id])
+                    .then(function(){
+                        numDone++;
+                        if (numDone == numToDo){
+                            dfd.resolve();
+                        }
+                    })
+                    .fail(function(err){
+                        dfd.reject(err);
+                    });
+                    numToDo++;
                 }
-            } else {
-                dfd.reject("Data error:  Campus not found");
-            }
-        })
-        .fail(function(err){
-            dfd.reject(err);
-        });
+            })
+            .fail(function(err){
+                dfd.reject(err);
+            });
 
     } else {
 

@@ -11,20 +11,16 @@ module.exports = {
     tableName: 'nextsteps_steps_trans',
 
     attributes: {
-  	
-        /* e.g.
-        nickname: 'string'
-        */
-        
+  	        
         step_id         : 'INTEGER',
         
         language_code	: 'STRING',
 
 
-        name	: 'STRING',
+        step_label	: 'STRING',
 
 
-        description	: 'STRING'
+        step_description	: 'STRING'
     },
     
     // Life cycle callbacks

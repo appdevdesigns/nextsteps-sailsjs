@@ -10,24 +10,20 @@ module.exports = {
 
     tableName: 'nextsteps_user_campus',
 
+
     attributes: {
 
-  	    /* e.g.
-  	    nickname: 'string'
-  	    */
+        user_uuid	: 'STRING',
 
-        user_UUID	: 'STRING',
-
-
-        campus_UUID	: 'STRING'
+        campus_uuid	: 'STRING'
     },
 
     // Life cycle callbacks
     afterCreate: function(newEntry, cb) {
         // Get the campus and user
-        NSServerCampus.findOne({ UUID: newEntry.campus_UUID })
+        NSServerCampus.findOne({ campus_uuid: newEntry.campus_uuid })
         .then(function(campus){
-            NSServerUser.findOne({ UUID: newEntry.user_UUID })
+            NSServerUser.findOne({ user_uuid: newEntry.user_uuid })
             .then(function(user){
                 // Get campus transaction entry
                 DBHelper.addTransaction('create', campus, user)
