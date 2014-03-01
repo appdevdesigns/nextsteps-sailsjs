@@ -25,7 +25,7 @@ module.exports = {
     },
     
     user: function(cb) {
-        dfd = $.Deferred();
+        var dfd = $.Deferred();
         NSServerUser.findOne({
             UUID: this.user_UUID
         })

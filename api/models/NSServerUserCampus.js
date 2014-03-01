@@ -20,6 +20,32 @@ module.exports = {
 
 
         campus_UUID	: 'STRING'
+    },
+
+    // Life cycle callbacks
+    afterCreate: function(newEntry, cb) {
+        // Get the campus and user
+        NSServerCampus.findOne({ UUID: newEntry.campus_UUID })
+        .then(function(campus){
+            NSServerUser.findOne({ UUID: newEntry.user_UUID })
+            .then(function(user){
+                // Get campus transaction entry
+                DBHelper.addTransaction('create', campus, user)
+                .then(function(){
+                    cb(null);
+                })
+                .fail(function(err){
+                    cb(err);
+                });
+            })
+            .fail(function(err){
+                cb(err);
+            });
+        })
+        .fail(function(err){
+            cb(err);
+        });
     }
+
 
 };
