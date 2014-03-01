@@ -14,6 +14,8 @@ module.exports = {
 
         /* e.g.nickname: 'string' */    
 
+        campus_id       : 'INTEGER',
+        
         language_code	: 'STRING',
 
 
