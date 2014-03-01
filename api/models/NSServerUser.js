@@ -21,9 +21,8 @@ module.exports = {
 
 
         GUID	: 'STRING',
-        
- 
-        default_lang : 'STRING',
+
+        default_lang: 'STRING',
 
 
         campuses: function(filter, cb) {
@@ -68,100 +67,30 @@ module.exports = {
             });
 
             return dfd;
- /*
-        NextStepsUserCampus.find({user_UUID:this.UUID})
-        .then(function(list){
+        },
 
-            var ids = [];
-            for (var i=0; i<list.length; i++) {
-                ids.push(list[i].campus_UUID);
-            }
-            filter.UUID = ids;
-            NextStepsCampus.find(filter)
-            .then(function(listCampuses){
-
-                var numDone = 0;
-                for(var lc=0; lc<listCampuses.length; lc++) {
-
-                    var addIt = function(item) {
-                        item.trans(function(err, trans) {
-
-                            if (err) {
-                                console.log(err);
-                            } else {
-                                item.name = trans.name;
-                            }
-                            numDone++;
-                            if (numDone >= listCampuses.length) {
-                                cb(null, listCampuses);
-                            }
-
-                        });
-                    };
-                    addIt(listCampuses[lc]);
+    
+        addCampus: function(campusObj, cb) {
+            var dfd = $.Deferred();
+            NSServerUserCampus.create({
+                campus_UUID: campusObj.UUID,
+                user_UUID: this.UUID
+            })
+            .then(function(obj){
+                if (cb) {
+                    cb(null);
                 }
-
+                dfd.resolve();
             })
             .fail(function(err){
-                cb(err);
+                if (cb) {
+                    cb(err);
+                }
+                dfd.reject(err);
             });
+            return dfd;
+        }
 
-        })
-        .fail(function(err){
-            cb(err);
-        });
-
-*/
-
-
-    }, // attributes
-
-
-
-    addCampus: function(campusObj, cb) {
-        var dfd = $.Deferred();
-        NSServerUserCampus.create({
-            campus_UUID: campusObj.UUID,
-            user_UUID: this.UUID
-        })
-        .then(function(obj){
-            if (cb) {
-                cb(null);
-            }
-            dfd.resolve();
-        })
-        .fail(function(err){
-            if (cb) {
-                cb(err);
-            }
-            dfd.reject(err);
-        });
-        return dfd;
-    },
-
-
-
-    addTransaction: function(transaction, cb) {
-        var dfd = $.Deferred();
-        NSServerTransactionLog.create({
-            user_UUID: this.UUID,
-            transaction: transaction
-        })
-        .then(function(obj){
-            if (cb) {
-                cb(null);
-            }
-            dfd.resolve();
-        })
-        .fail(function(err){
-            if (cb) {
-                cb(err);
-            }
-            dfd.reject(err);
-        });
-        return dfd;
-    }
-
-  }
+    }// attributes
 
 };

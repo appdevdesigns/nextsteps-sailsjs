@@ -23,6 +23,24 @@ module.exports = {
 
 
         long_name	: 'STRING'
+    },
+    
+    // Life cycle callbacks
+    afterCreate: function(newEntry, cb) {
+        // Tell the campus there's an update
+        NSServerCampus.findOne(newEntry.campus_id)
+        .then(function(campus){
+            NSServerCampus.afterUpdate(campus, cb);
+        })
+        .fail(function(err){
+            cb(err);
+        });
+    },
+    
+    afterUpdate: function(entry, cb) {
+        // same as after create
+        NSServerCampusTrans.afterCreate(entry, cb);
     }
+
 
 };

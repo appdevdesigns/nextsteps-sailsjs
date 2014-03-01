@@ -23,6 +23,36 @@ module.exports = {
 
     node_id	: 'INTEGER',
     
+    
+    // Generate transaction entry
+    transaction: function(operation, lang, cb) {
+        var dfd = $.Deferred();
+        var xEntry = {  'operation': operation,
+                        'model': 'Campus',
+                        'params': {
+                            'uuid': this.UUID
+                        } };
+        if (operation != "destroy") {
+            // Look up the translation
+            this.trans(lang, function(err, transEntry){
+                if (err) {
+                    if (cb) {
+                        cb(err);
+                    }
+                    dfd.reject(err);
+                } else {
+                    xEntry.params.short_name = transEntry.short_name;
+                    xEntry.params.long_name = transEntry.long_name;
+                    if (cb) {
+                        cb(xEntry);
+                    }
+                    dfd.resolve(xEntry);
+                }
+            });
+        }
+        return dfd;
+    },
+    
     addTranslation: function(transEntry, cb) {
         var dfd = $.Deferred();
         transEntry.campus_id = this.id;
@@ -53,7 +83,6 @@ module.exports = {
             cb = lang;
             lang = 'en';
         }
-
         NSServerCampusTrans.find({campus_id:this.id,language_code:lang})
         .then(function(listTrans){
             var thisTrans = {};
@@ -81,7 +110,6 @@ module.exports = {
         }
 
         filter = filter || {};
-
         DBHelper.manyThrough(NSServerUserCampus, {campus_UUID:this.UUID}, NSServerUser, 'user_UUID', 'UUID', filter)
         .then(function(listUsers) {
             if (cb) {
@@ -97,6 +125,48 @@ module.exports = {
         });
         return dfd;
     }
+  },
+
+  
+  // Life cycle callbacks
+  afterCreate: function(newEntry, cb) {
+      // Nothing to do.  No users if we're just now creating a node
+      cb();
+  },
+  
+  afterUpdate: function(entry, cb) {
+      NSServerCampus.findOne(entry.id)
+      .then(function(campus){
+          // Notify all users
+          campus.users().
+          then(function(users){
+              var numDone = 0;
+              var numToDo = 0;
+              users.forEach(function(user){
+                  DBHelper.addTransaction('update', campus, user)
+                  .then(function(){
+                      numDone++;
+                      if (numDone == numToDo){
+                          cb(null);
+                      }
+                  })
+                  .fail(function(err){
+                      cb(err);
+                  });
+                  numToDo++;
+              });
+              if (numToDo == 0){
+                  cb(null);
+              }
+          })
+          .fail(function(err){
+              cb(err);
+          });
+      })
+      .fail(function(err){
+          cb(err);
+      });
   }
+  
 
 };
