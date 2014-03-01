@@ -23,8 +23,14 @@ module.exports = function(req, res, next) {
         req.appdev.userUUID = 'UUID';
         // setupGMA
         setupGMA(userID, password)
+        .fail(function(err){
+console.log('error attempting to setupGMA()');
+            dfd.reject(err);
+        })
         .then(function(gma){
 console.log('GMA setup done...');
+console.log(gma);
+
             // getAssignments
             var assignmentsDone = syncAssignments(gma.assignments, req.appdev.userUUID);
 
@@ -39,32 +45,85 @@ console.log('GMA assignments and measurements done ...');
             .fail(function(err){
                 dfd.reject(err);
             });
-        })
-        .fail(function(err){
-            dfd.reject(err);
         });
+
     } else {
         // Nothing to do if no GMA
         dfd.resolve();
     }
-    
+
     $.when(dfd)
     .then(function(){
         next();
     })
     .fail(function(err){
-        ADCore.comm.error(res,err);
+        ADCore.comm.error(res, err);
     });
 };
 
+
+
 var setupGMA = function( username, password ) {
     var dfd = $.Deferred();
+
+    var gmaData = {};
+
     console.log('setting up GMA .. ');
     /// setup here:
+    // create new gma instance
+    var gma = new GMA({
+        gmaBase: sails.config.nsserver.gmaBaseURL,
+        casURL: sails.config.nsserver.casURL
+    });
 
+    gma.loginDrupal(username, password)
+    .fail(function(err){
+        console.log("Problem logging in to GMA server");
+        console.log(err);
+        dfd.reject(err);
+    })
+    .done(function(){
+        console.log("success");
+        console.log(gma.GUID, gma.preferredName, gma.renId);
+
+        console.log("\nFetching user assignments...");
+        gma.getAssignments()
+        .fail(function(err){
+            console.log("Problem fetching user assignments");
+            console.log(err);
+            dfd.reject(err);
+        })
+        .done(function(byID, byName, list) {
+
+            gmaData.assignments = byID;
+            gmaData.measurements = {};
+
+            var numDone = 0;
+            for (var l=0; l<list.length; l++) {
+
+                var getMeasurements = function(assignment) {
+                    assignment.getMeasurements()
+                    .fail(function(err){
+                        dfd.reject(err);
+                    })
+                    .then(function(listMeasurements){
+                        gmaData.measurements[assignment.nodeId] = listMeasurements;
+                        numDone++;
+                        if (numDone >= list.length) {
+                            dfd.resolve(gmaData);
+                        }
+                    });
+                };
+                getMeasurements(list[l]);
+            }
+
+        });
+    });
+
+/*
     var dummy = {
         assignments: { 101: "Assign1", 120: "Assign2"},
-        measurements: { 
+        measurements: {
             101: [
             {
                 measurementId: 12,
@@ -84,8 +143,8 @@ var setupGMA = function( username, password ) {
                 measurementDescription: "desc2",
                 measurementValue: 33
             }],
-            
-            
+
+
             120: [
               {
                   measurementId: 13,
@@ -108,6 +167,7 @@ var setupGMA = function( username, password ) {
         }
     };
     dfd.resolve(dummy);
+*/
 
     return dfd;
 };
@@ -127,7 +187,7 @@ var updateCampus = function(campus, name) {
                 } else {
                     dfd.resolve();
                 }
-                
+
             });
         } else {
             dfd.resolve();
@@ -192,7 +252,7 @@ var processNode = function(gmaId, name) {
     .fail(function(err){
         dfd.reject(err);
     });
-    
+
     return dfd;
 };
 
@@ -201,7 +261,7 @@ var syncNodeData = function(nodes) {
     // assume all new
     var numDone = 0;
     var numToDo = 0;
-    
+
     for (var id in nodes){
         processNode(id, nodes[id].name)
         .then(function(){
@@ -241,7 +301,7 @@ var addUserToCampus = function(userUUID, campus) {
             // Nothing to do
             dfd.resolve();
         }
-        
+
     })
     .fail(function(err){
         dfd.reject(err);
@@ -254,7 +314,7 @@ var addUserToNodes = function(userUUID, nodes) {
     // assume all new
     var numDone = 0;
     var numToDo = 0;
-    
+
     for (var id in nodes){
         NSServerCampus.findOne({
             node_id: id
@@ -274,7 +334,7 @@ var addUserToNodes = function(userUUID, nodes) {
             } else {
                 dfd.reject("Data error:  Campus not found");
             }
-            
+
         })
         .fail(function(err){
             dfd.reject(err);
@@ -287,7 +347,7 @@ var addUserToNodes = function(userUUID, nodes) {
 var syncAssignments = function( assignments, userUUID ) {
     var dfd = $.Deferred();
     console.log('getting assignments ');
-    
+
     // Make sure our tables match the latest from GMA
     syncNodeData(assignments)
     .then(function(){
@@ -303,7 +363,7 @@ var syncAssignments = function( assignments, userUUID ) {
     .fail(function(err){
         dfd.reject(err);
     });
-    
+
     return dfd;
 };
 
@@ -312,7 +372,7 @@ var syncAssignments = function( assignments, userUUID ) {
 var syncMeasurements = function( measurements ) {
     var dfd = $.Deferred();
     console.log('getting measurements ');
-    
+
     // Make sure our tables match the latest from GMA
 /*    syncMeasurementData(gma.measurements)
     .then(function(){
