@@ -32,8 +32,18 @@ module.exports = {
         })
         .then(function(gma){
 
-            console.log('GMA setup done...');
-            console.log(gma);
+//console.log('GMA setup done...');
+//console.log(gma);
+
+
+            for (var id in gma.measurements) {
+                var newMeasurementList = [];
+                var currList = gma.measurements[id];
+                currList.forEach(function(measurement){
+                   newMeasurementList.push(measurement.data);
+                });
+                gma.measurements[id] = newMeasurementList;
+            }
 
 /*
 //// Temporary Testing options:
@@ -98,7 +108,7 @@ var setupGMA = function( username, password ) {
 
     var gmaData = {};
 
-    console.log('in setupGMA() ... ');
+//console.log('in setupGMA() ... ');
 
     /// setup here:
     // create new gma instance

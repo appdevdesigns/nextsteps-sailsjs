@@ -31,18 +31,18 @@ module.exports = {
             } else {
 
                 filter[keyB] = ids;
-    console.log('modelB.filter:');
-    console.log(filter);
+//console.log('modelB.filter:');
+//console.log(filter);
 
                 modelB.find(filter)
                 .then(function(listCampuses){
 
-    console.log('modelB list:');
-    console.log(listCampuses);
-
-    console.log('....');
-    console.log('cb():');
-    console.log(cb);
+//console.log('modelB list:');
+//console.log(listCampuses);
+//
+//console.log('....');
+//console.log('cb():');
+//console.log(cb);
                     /*
                     var numDone = 0;
                     for(var lc=0; lc<listCampuses.length; lc++) {
@@ -77,7 +77,7 @@ module.exports = {
             }
         })
         .fail(function(err){
-console.log("manyThrough err: "+err);
+            console.log("DBHelper.manyThrough() err: "+err);
             if (cb) cb(err);
             dfd.reject(err);
         });
@@ -152,7 +152,7 @@ console.log("manyThrough err: "+err);
         });
         return dfd;
     },
-    
+
     addTransactionToResponse: function(operation, obj, user, res) {
         var dfd = $.Deferred();
         obj.transaction(operation, user.default_lang)

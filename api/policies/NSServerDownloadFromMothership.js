@@ -227,13 +227,13 @@ var addUserToCampus = function(userUUID, campus) {
 
 var addUserToNodes = function(userUUID, nodes) {
     var dfd = $.Deferred();
-    
+
     if ($.isEmptyObject(nodes)) {
         dfd.resolve();
     } else {
         var numDone = 0;
         var numToDo = 0;
-        
+
         for (var id in nodes){
             NSServerCampus.findOne({
                 node_id: id
@@ -253,7 +253,7 @@ var addUserToNodes = function(userUUID, nodes) {
                 } else {
                     dfd.reject("Data error:  Campus not found");
                 }
-                
+
             })
             .fail(function(err){
                 dfd.reject(err);
@@ -392,7 +392,6 @@ var createStep = function(campusUUID, measurement) {
     })
     .then(function(step){
         step.addTranslation({
-            step_id: step.id,
             language_code: ADCore.user.current().getLanguageCode(),
             step_label: measurement.measurementName,
             step_description: measurement.measurementDescription
@@ -419,29 +418,29 @@ var processMeasurement = function(campusUUID, measurement) {
         campus_uuid: campusUUID,
         measurement_id: measurement.measurementId
     })
+    .fail(function(err){
+        dfd.reject(err);
+    })
     .then(function(step){
         if (step){
             // Update the step
             updateStep(step, measurement)
-            .then(function(){
-                dfd.resolve();
-            })
             .fail(function(err){
                 dfd.reject(err);
+            })
+            .then(function(){
+                dfd.resolve();
             });
         } else {
             // Create the step
             createStep(campusUUID, measurement)
-            .then(function(){
-                dfd.resolve();
-            })
             .fail(function(err){
                 dfd.reject(err);
+            })
+            .then(function(){
+                dfd.resolve();
             });
         }
-    })
-    .fail(function(err){
-        dfd.reject(err);
     });
 
     return dfd;
@@ -452,11 +451,16 @@ var processMeasurement = function(campusUUID, measurement) {
 
 var processNodeMeasurements = function(nodeId, measurements) {
     var dfd = $.Deferred();
+
+    // if there are measurements to process
     if (measurements.length>0) {
 
         // Find the campus
         NSServerCampus.findOne({
             node_id: nodeId
+        })
+        .fail(function(err){
+            dfd.reject(err);
         })
         .then(function(campus){
             if (campus){
@@ -465,14 +469,14 @@ var processNodeMeasurements = function(nodeId, measurements) {
 
                 for (var id in measurements){
                     processMeasurement(campus.campus_uuid, measurements[id])
+                    .fail(function(err){
+                        dfd.reject(err);
+                    })
                     .then(function(){
                         numDone++;
                         if (numDone == numToDo){
                             dfd.resolve();
                         }
-                    })
-                    .fail(function(err){
-                        dfd.reject(err);
                     });
                     numToDo++;
                 }
@@ -482,9 +486,6 @@ var processNodeMeasurements = function(nodeId, measurements) {
             } else {
                 dfd.resolve();
             }
-        })
-        .fail(function(err){
-            dfd.reject(err);
         });
 
     } else {
