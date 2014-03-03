@@ -13,7 +13,7 @@ module.exports = {
     tableName: 'nextsteps_steps',
 
     attributes: {
-  	    
+
          step_uuid	: 'STRING',
 
          campus_uuid   : 'STRING',
@@ -45,7 +45,7 @@ module.exports = {
                          dfd.reject(err);
                      } else {
                          xEntry.params.step_label = transEntry.step_label;
-                         xEntry.params.description = transEntry.description;
+                         xEntry.params.step_description = transEntry.step_description;
                          if (cb) {
                              cb(xEntry);
                          }
@@ -58,23 +58,25 @@ module.exports = {
              }
              return dfd;
          },
-         
+
          addTranslation: function(transEntry, cb) {
              var dfd = $.Deferred();
+
              transEntry.step_id = this.id;
              NSServerStepsTrans.create(transEntry)
-             .then(function(obj){
-                 if (cb) {
-                     cb(null);
-                 }
-                 dfd.resolve();
-             })
              .fail(function(err){
                  if (cb) {
                      cb(err);
                  }
                  dfd.reject(err);
+             })
+             .then(function(obj){
+                 if (cb) {
+                     cb(null);
+                 }
+                 dfd.resolve();
              });
+
              return dfd;
          },
 
@@ -124,19 +126,19 @@ module.exports = {
              } else {
                  dfd.reject("This is a custom step");
              }
-             
+
              return dfd;
          },
-         
+
          isPersonal: function() {
              return (this.campus_uuid == null);
          },
-         
+
          // Get list of user objects associated with this step
          // Handles both personal steps and campus steps
          users: function(cb) {
              var dfd = $.Deferred();
-             
+
              var userListDfd = $.Deferred();
              if (this.isPersonal()) {
                  // A Personal step; get the user UUIDs
@@ -160,7 +162,7 @@ module.exports = {
                  }
                  dfd.reject(err);
              });
-             
+
              return dfd;
          }
 
@@ -172,7 +174,7 @@ module.exports = {
     getTransModel : function() {
         return NSServerStepsTrans;
     },
-    
+
     // Life cycle callbacks
 //    afterCreate: function(newEntry, cb) {
 //        createTransaction(newEntry.id, 'create')
@@ -183,7 +185,7 @@ module.exports = {
 //            cb(err);
 //        });
 //    },
-//    
+//
     afterUpdate: function(entry, cb) {
         createTransaction(entry.id, 'update')
         .then(function(){

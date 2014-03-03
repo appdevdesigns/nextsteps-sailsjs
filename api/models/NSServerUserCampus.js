@@ -46,45 +46,6 @@ module.exports = {
         .fail(function(err){
             cb(err);
         });
-    }, // afterCreate
-
-    beforeDestroy: function(criteria, cb) {
-        
-        // Prior to a destroy, we want to add a transaction for the associated user.
-         NSServerUserCampus.findOne(criteria)
-        .done(function(err, userCampus){
-            if (err) {
-                cb(err);
-            } else {
-            
-               NSServerCampus.findOne({campus_uuid: userCampus.campus_uuid})
-               .done(function(err, campus){
-                   if(err) {
-                       cb(err);
-                   } else {
-                       NSServerUser.findOne({user_uuid: userCampus.user_uuid})
-                       .done(function(err, user){                       
-                           if(err){
-                               cb(err);
-                           } else {
-       
-                             DBHelper.addTransaction('destroy', campus, user)
-                               .then(function(){
-                                   cb(null);
-                               })
-                               .fail(function(err){
-                                   cb(err);
-                               });
-                           }       
-                       });
-
-                   }
-               });
-
-            }                    
-        });
-        
-    } // beforeDestroy
-
+    } // afterCreate
 
 };

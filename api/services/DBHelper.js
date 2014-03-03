@@ -31,18 +31,19 @@ module.exports = {
             } else {
 
                 filter[keyB] = ids;
-//    console.log('modelB.filter:');
-//    console.log(filter);
+//console.log('modelB.filter:');
+//console.log(filter);
 
                 modelB.find(filter)
                 .then(function(listCampuses){
 
-//    console.log('modelB list:');
-//    console.log(listCampuses);
+
+//console.log('modelB list:');
+//console.log(listCampuses);
 //
-//    console.log('....');
-//    console.log('cb():');
-//    console.log(cb);
+//console.log('....');
+//console.log('cb():');
+//console.log(cb);
                     /*
                     var numDone = 0;
                     for(var lc=0; lc<listCampuses.length; lc++) {
@@ -77,7 +78,7 @@ module.exports = {
             }
         })
         .fail(function(err){
-//console.log("manyThrough err: "+err);
+            console.log("DBHelper.manyThrough() err: "+err);
             if (cb) cb(err);
             dfd.reject(err);
         });
@@ -152,7 +153,7 @@ module.exports = {
         });
         return dfd;
     },
-    
+
     addTransactionToResponse: function(operation, obj, user, res) {
         var dfd = $.Deferred();
         obj.transaction(operation, user.default_lang)
@@ -348,14 +349,36 @@ module.exports = {
                      } else {
                          // Determine if campus can be destroyed
                          if ( ! campus.userModifyRestricted() ) {
-                             DBHelper.multilingualDestroy(NSServerCampus, {campus_uuid : params.campus_uuid}, 'campus_id')
-                             .then(function(){
-                                 console.log('Deleted campus ' + params.campus_uuid + ' for user ' + userUUID);
-                                  dfd.resolve();
-                              })
-                              .fail(function(err){
-                                  dfd.reject(err);
-                              });
+                             console.log('about to delete user-campus');
+                             NSServerUserCampus.destroy({user_uuid : userUUID, campus_uuid : params.campus_uuid})
+                             .done(function(err){
+                                 if (err) {
+                                     dfd.reject(err);
+                                 } else {
+                                     console.log('about to delete campus');
+                                     DBHelper.multilingualDestroy(NSServerCampus, {campus_uuid : params.campus_uuid}, 'campus_id')
+                                     .then(function(){
+                                         console.log('Deleted campus ' + params.campus_uuid + ' for user ' + userUUID);
+                                         NSServerUser.findOne({user_uuid : userUUID})
+                                         .done(function(err,user){
+                                             DBHelper.addTransaction('destroy', campus, user).
+                                             then(function(){
+                                                 dfd.resolve();
+                                             })
+                                             .fail(function(err){
+                                                 console.log('Failed to add transaction for campus destroy, ' + err);
+                                                 dfd.reject(err);
+                                             });
+                                
+                                         });
+                                     })
+                                     .fail(function(err){
+                                         console.log(err);
+                                         dfd.reject(err);
+                                     });            
+                                 }
+               
+                             });
 
                           } else {
                               console.log('Failed to delete campus, permission denied');
@@ -434,29 +457,54 @@ module.exports = {
                      if(err){
                          dfd.reject(err);
                      } else {
-                         // Destroy joining model entry, ignore return
+                         // Destroy joining model entry
                           NSServerUserContact.destroy(
                              {user_uuid:userUUID, 
                              contact_uuid:params.contact_uuid})
                          .done(function(err){
-                             console.log('Destroyed contact ' + params.contact_uuid +
-                                     ' for user ' + userUUID);
-
-                             // If the user is the only person related to this contact,
-                             // destroy the contact. Otherwise, someone else is using
-                             // the same contact so we keep it.
-                             if ( 1 == userContacts.length ) {
-                                 console.log('destroying contact');
-                                 // Destroy contact, ignore return
-                                 NSServerContact.destroy({ contact_uuid : params.contact_uuid})
-                                 .done(function(err){
-                                     dfd.resolve();
-                                 }); 
-                                 
+                             if (err) {
+                                 dfd.reject(err);
                              } else {
-                                 dfd.resolve();
+                                 console.log('Destroyed contact ' + params.contact_uuid +
+                                         ' for user ' + userUUID);
+                                 // add transaction for this user
+                                 NSServerUser.findOne({user_uuid : userUUID})
+                                 .done(function(err,user){
+                                     if(err) {
+                                         dfd.reject(err);
+                                     } else {
+                                         NSServerContact.findOne({contact_uuid : params.contact_uuid})
+                                         .done(function(err,contact){
+                                             if (err){
+                                                 dfd.reject(err);
+                                             } else {
+                                                 DBHelper.addTransaction('destroy', contact, user).
+                                                 then(function(){
+                                                     // If the user is the only person related to this contact,
+                                                     // destroy the contact. Otherwise, someone else is using
+                                                     // the same contact so we keep it.
+                                                     if ( 1 == userContacts.length ) {
+                                                         // Destroy contact, ignore errors
+                                                         NSServerContact.destroy({ contact_uuid : params.contact_uuid})
+                                                         .done(function(err){
+                                                             dfd.resolve();
+                                                         }); 
+                                                         
+                                                     } else {
+                                                         dfd.resolve();
+                                                     }
+                                                 })
+                                                 .fail(function(err){
+                                                     console.log('Failed to add transaction for contact destroy, ' + err);
+                                                     dfd.reject(err);
+                                                 });
+                                             }
+                                         });
+                                     }
+                                 });
                              }
-                         });                         
+
+                        });                         
                       }
                          
                  });

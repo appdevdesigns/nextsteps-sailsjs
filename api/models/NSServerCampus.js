@@ -55,6 +55,11 @@ module.exports = {
                     dfd.resolve(xEntry);
                 }
             });
+        } else { // is destroy operation
+            if (cb) {
+                cb(xEntry);
+            }
+            dfd.resolve(xEntry);
         }
         return dfd;
     }, // transaction

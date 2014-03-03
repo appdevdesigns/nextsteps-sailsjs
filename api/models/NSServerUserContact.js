@@ -51,44 +51,44 @@ module.exports = {
         });
      }, // afterCreate
     
-    beforeDestroy: function(criteria, cb) {
-         
-        // Prior to a destroy, we want to add a transaction for the user who destroyed
-        // the contact in case they need to sync multiple devices.
-        NSServerUserContact.findOne(criteria)
-        .done(function(err, userContact){
-            if (err) {
-                cb(err);
-            } else {
-            
-               NSServerContact.findOne({contact_uuid:userContact.contact_uuid})
-               .done(function(err, contact){
-                   if(err) {
-                       cb(err);
-                   } else {
-                       NSServerUser.findOne({user_uuid:userContact.user_uuid})
-                       .done(function(err, user){                       
-                           if(err){
-                               console.log(err);
-                               cb(err);
-                           } else {
-       
-                             DBHelper.addTransaction('destroy', contact, user)
-                               .then(function(){
-                                   cb(null);
-                               })
-                               .fail(function(err){
-                                   cb(err);
-                               });
-                           }       
-                       });
-
-                   }
-               });
-
-            }                    
-        });
-        
-    } // beforeDestroy
+//    beforeDestroy: function(criteria, cb) {
+//         
+//        // Prior to a destroy, we want to add a transaction for the user who destroyed
+//        // the contact in case they need to sync multiple devices.
+//        NSServerUserContact.findOne(criteria)
+//        .done(function(err, userContact){
+//            if (err) {
+//                cb(err);
+//            } else {
+//            
+//               NSServerContact.findOne({contact_uuid:userContact.contact_uuid})
+//               .done(function(err, contact){
+//                   if(err) {
+//                       cb(err);
+//                   } else {
+//                       NSServerUser.findOne({user_uuid:userContact.user_uuid})
+//                       .done(function(err, user){                       
+//                           if(err){
+//                               console.log(err);
+//                               cb(err);
+//                           } else {
+//       
+//                             DBHelper.addTransaction('destroy', contact, user)
+//                               .then(function(){
+//                                   cb(null);
+//                               })
+//                               .fail(function(err){
+//                                   cb(err);
+//                               });
+//                           }       
+//                       });
+//
+//                   }
+//               });
+//
+//            }                    
+//        });
+//        
+//    } // beforeDestroy
 
 };
