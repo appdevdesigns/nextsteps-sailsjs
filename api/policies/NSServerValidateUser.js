@@ -6,10 +6,95 @@
  * @docs        :: http://sailsjs.org/#!documentation/policies
  *
  */
+var $ = require('jquery');
+
+var testClientData = {
+        'username' : 'jon@vellacott.co.uk',
+        'password' : 'manila',
+        'lastSyncTimestamp': '',
+        'appVersion': '0.0.1',
+        'transactionLog': [{
+            'operation': 'create',
+            'model': 'Contact',
+            'params': {
+                'contact_uuid'      : '01234567890abcdef',
+                'contact_firstname' : 'Samuel',
+                'contact_lastname'  : 'Smith',
+                'contact_nickname'  : 'Sam',
+                'campus_uuid'       : 'mycampusuuid',
+                'year_id'           : '1',
+                'contact_phone'     : '123-456-7890',
+                'contact_email'     : 'sam.smith@gmail.com',
+                'contact_notes'     : 'blond hair'             
+            }           
+        },
+        {
+            'operation': 'create',
+            'model': 'Contact',
+            'params': {
+                'contact_uuid'      : '234567890abcdef01',
+                'contact_firstname' : 'Susan',
+                'contact_lastname'  : 'Smith',
+                'contact_nickname'  : 'Sue',
+                'campus_uuid'       : 'mycampusuuid',
+                'year_id'           : '1',
+                'contact_phone'     : '123-456-7890',
+                'contact_email'     : 'susan.smith@gmail.com',
+                'contact_notes'     : 'wife of Sam'             
+            }
+        },
+        {
+            'operation': 'create',
+            'model': 'Contact',
+            'params': {
+                'contact_uuid'      : '234567890abcdefxx',
+                'contact_firstname' : 'Jason',
+                'contact_lastname'  : 'Smith',
+                'contact_nickname'  : '',
+                'campus_uuid'       : 'anothercampusuuid',
+                'year_id'           : '3',
+                'contact_phone'     : '123-456-7890',
+                'contact_email'     : 'jason.smith@gmail.com',
+                'contact_notes'     : ''             
+            }
+        },
+        {
+            'operation': 'update',
+            'model': 'Contact',
+            'params': {
+                'contact_uuid'      : '234567890abcdef01',
+                'contact_firstname' : 'Susan',
+                'contact_lastname'  : 'Smith',
+                'contact_nickname'  : 'Susie',
+                'campus_uuid'       : 'mycampusuuid',
+                'year_id'           : '2',
+                'contact_phone'     : '123-456-7890',
+                'contact_email'     : 'susan.smith@gmail.com',
+                'contact_notes'     : 'wife of Sam'             
+            }
+        },
+        {
+            'operation': 'destroy',
+            'model': 'Contact',
+            'params': {
+                'contact_uuid'      : '234567890abcdefxx',
+                'contact_firstname' : 'Jason',
+                'contact_lastname'  : 'Smith',
+                'contact_nickname'  : '',
+                'campus_uuid'       : 'anothercampusuuid',
+                'year_id'           : '3',
+                'contact_phone'     : '123-456-7890',
+                'contact_email'     : 'jason.smith@gmail.com',
+                'contact_notes'     : ''             
+            }
+        }]        
+};
+
 module.exports = function(req, res, next) {
 
     console.log('validate user ... ');
     req.appdev = {};
+
 
     // TODO: Implement ADCore.user.current(req).GUID,
     // Assign userLang from session information
@@ -19,9 +104,12 @@ module.exports = function(req, res, next) {
     if ( req.param('test') ) {
 
         userGuid = '9ACB3BAC-C706-5096-4ED0-2557002E3ADE';
-        req.body.lastSyncTimestamp = Date.now() - 10;
-        req.body.username = 'jon@vellacott.co.uk';
-        req.body.password = 'manila';
+        testClientData.lastSyncTimestamp = Date.now() - 10;
+        
+        for( var key in testClientData) {
+            req.body[key] = testClientData[key];
+        }
+        
    }
     else if ( req.param('test2') ) {
         userGuid = '5678';

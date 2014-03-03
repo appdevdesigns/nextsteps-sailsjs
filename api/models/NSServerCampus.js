@@ -57,7 +57,7 @@ module.exports = {
             });
         }
         return dfd;
-    },
+    }, // transaction
 
     addTranslation: function(transEntry, cb) {
         var dfd = $.Deferred();
@@ -76,7 +76,7 @@ module.exports = {
             dfd.reject(err);
         });
         return dfd;
-    },
+    }, // addTranslation
 
     trans:function(lang, cb) {
         // find the translations for this entry.
@@ -101,7 +101,7 @@ module.exports = {
         .fail(function(err){
             cb(err);
         });
-    },
+    }, // trans
 
 
 
@@ -130,8 +130,9 @@ module.exports = {
             dfd.reject(err);
         });
         return dfd;
-    }
-  },
+    } // users
+    
+  }, // attributes
 
 
   // Life cycle callbacks
