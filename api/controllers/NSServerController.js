@@ -78,8 +78,10 @@ module.exports = {
   sync: function (req, res) {
 
       var log = req.appdev.transactionLog;
+      var lastSyncTimestamp = Date.now();
+      console.log(' ==> lastSyncTimestamp:'+lastSyncTimestamp)
       ADCore.comm.success(res, {
-          "lastSyncTimestamp": Date.now(),
+          "lastSyncTimestamp": lastSyncTimestamp,
           "transactionLog":log
         });
 

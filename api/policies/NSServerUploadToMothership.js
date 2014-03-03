@@ -7,19 +7,10 @@
  * @docs        :: http://sailsjs.org/#!documentation/policies
  *
  */
-//// This is where we define our known adaptors:
-var externalSystems = null;
-
 
 module.exports = function(req, res, next) {
 
-    if (externalSystems == null) {
-        externalSystems = {
-                'none': function(req, res) { var dfd = $.Deferred(); dfd.resolve(); return dfd; },
-                'test': NSServerSystem_Test.upload,
-                'GMA' : NSServerSystem_GMA.upload
-        };
-    }
+    var externalSystems = NSServer.externalSystems('upload');
 
     if (externalSystems[sails.config.nsserver.externalSystem]) {
 

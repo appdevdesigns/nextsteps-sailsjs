@@ -10,6 +10,7 @@
 
 var $ = require('jquery');
 
+
 //// This is where we define our known adaptors:
 var externalSystems = null;
 

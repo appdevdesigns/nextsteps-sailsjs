@@ -1,4 +1,4 @@
-var nssSync = require('../api/services/NSServerSync.js');
+var nssSync = require('../api/services/NSServer.js');
 var ADCore = require('../api/services/ADCore.js');
 
 var assert = require('chai').assert;
@@ -39,12 +39,12 @@ var resNoError = {};
 describe('NSS Sync Service: ', function () {
   before(function(){
   });
-  
+
   it ('Good Request', function (){
     var req = new request(reqData);
     ADCore.auth.markAuthenticated(req, 'GUID1');
     nssSync.synchronize(req, resNoError).done(function(data){
-        assert.ok(true, 'Should have called this function');        
+        assert.ok(true, 'Should have called this function');
     })
     .fail(function(err) {
         assert.ok(false, 'Expected success');
@@ -115,5 +115,5 @@ describe('NSS Sync Service: ', function () {
           assert.ok(true, 'Expected failure');
       });
   });
-  
+
 });

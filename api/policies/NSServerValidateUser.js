@@ -54,7 +54,13 @@ module.exports = function(req, res, next) {
         else if (userObj) {
 
             var text = 'Found existing user, uuid = ' + userObj.user_uuid + '  guid='+userObj.user_guid;
-            endValidation(text, req, userObj, next);
+            endValidation({
+                    logMsg:text,
+                    req:req,
+                    userObj:userObj,
+                    res:res
+                },
+                next);
 
         }
 
@@ -68,8 +74,15 @@ module.exports = function(req, res, next) {
                     ADCore.comm.error(res, 'Failed to create user during sync: ' + err);
                 } else {
 
-                    var text = 'Created new user record for GUID = ' + userGuid
-                    endValidation(text, req, userObj, next);
+                    var text = 'Created new user record for GUID = ' + userGuid;
+                    endValidation({
+                            logMsg:text,
+                            req:req,
+                            userObj:userObj,
+                            res:res
+                        },
+                        next);
+
                 }
             });
         } // else
@@ -78,9 +91,38 @@ module.exports = function(req, res, next) {
     }); // .done()
 };
 
-var endValidation = function(logMsg, req, userObj, next) {
+
+
+var endValidation = function(options, next) {
+    var logMsg = options.logMsg;
+    var req = options.req;
+    var res = options.res;
+    var userObj = options.userObj;
+
     console.log(logMsg);
     req.appdev.userUUID = userObj.user_uuid;
     req.appdev.userLang = userObj.default_lang;
-    next(); // allow next policy to execute
+
+
+    //// Now give our external system a chance to validate our user's credentials
+    var externalSystems = NSServer.externalSystems('validateUser');
+    if (externalSystems[sails.config.nsserver.externalSystem]) {
+
+        externalSystems[sails.config.nsserver.externalSystem](req,res)
+        .fail(function(err){
+            ADCore.comm.error(res, err);
+        })
+        .then(function( data ){
+
+            // everything completed normally
+            next();
+
+        });
+
+    } else {
+        var err = new Error('*** Error: NSServerValidateUser: unknown configured system ['+sails.config.nsserver.externalSystem+']');
+        console.log(err);
+        next(err);
+    }
+
 };

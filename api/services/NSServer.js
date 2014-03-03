@@ -1,5 +1,5 @@
 /**
- * NSServerSync
+ * NSServer
  *
  * @module      :: Service
  * @description :: This is handles the sync service for NextSteps Server
@@ -7,9 +7,8 @@
  *
  */
 var $ = require('jquery');
-var GMA = require('gma-api');
-var ADCore = require('./ADCore.js');
 
+/*
 var syncFormat = {
     lastSyncTimestamp:1,
     appVersion:1,
@@ -35,10 +34,40 @@ var paramsCorrect = function( req, format) {
     return correct;
 };
 
+*/
+
+var externalSystems = {};
+var systemNone = {
+        download:function(req, res) { var dfd = $.Deferred(); dfd.resolve({assignments:{}, measurements:{}}); return dfd; },
+        upload:function(req, res) { var dfd = $.Deferred(); dfd.resolve(); return dfd; },
+        validateUser:function(req, res) { console.log('**** systemNone.validateUser() not defined.'); var dfd = $.Deferred(); dfd.resolve(); return dfd; },
+        test:function(){ }
+};
 
 
 module.exports = {
 
+    externalSystems:function(key){
+
+        if (typeof systemNone[key] == 'undefined') {
+
+            console.log('*** NSServer.externalSystems() called with invalid key ['+key+']');
+            return {};
+
+        } else {
+
+            if (typeof externalSystems[key] == 'undefined') {
+                externalSystems[key] = {
+                        'none': systemNone[key],
+                        'test': NSServerSystem_Test[key],
+                        'GMA' : NSServerSystem_GMA[key]
+                };
+            }
+            return externalSystems[key];
+
+        }
+    },
+/*
     synchronize: function (req, res) {
 
         var dfd = $.Deferred();
@@ -92,67 +121,69 @@ console.log('validation done...');
 
       return dfd;
     },
-
+*/
     // These are for exposing private functions for testing only
     test: {
-        validateUser: function( guid ) {
-            return validateUser(guid);
-        },
-        setupGMA: function( username, password ) {
-            return setupGMA( username, password );
-        },
-        getAssignments: function( gma ) {
-            return getAssignments( gma );
-        }
+
+//        validateUser: function( guid ) {
+//            return validateUser(guid);
+//        },
+//        setupGMA: function( username, password ) {
+//            return setupGMA( username, password );
+//        },
+//        getAssignments: function( gma ) {
+//            return getAssignments( gma );
+//        }
+
     }
 };
 
 
 
-var validateUser = function( guid ) {
-    var dfd = $.Deferred();
-
-    console.log('validating user ... ');
-    if (!guid) {
-        dfd.reject("Invalid GUID");
-    } else {
-        // is in User table?
-        // If not, generate UUID and insert
-        var uuid = ADCore.util.createUUID();
-        // create uuid, guid
-        dfd.resolve(uuid);
-    }
-
-    return dfd;
-};
-
-
-
-
-
-var getTransactionsForUser = function( userUuid, lastSync ) {
-    var dfd = $.Deferred();
-    console.log('getting transactions to send ');
-    /*
-    Filter transaction log by user and last update time
-
-     */
-    dfd.resolve("log");
-
-    return dfd;
-};
-
-var applyTransactionsFromUser = function( userUuid, log ) {
-    var dfd = $.Deferred();
-    console.log('applying transactions from user ');
-    /*
-    Apply changes from the user
-    Add each entry to the transaction log
-    Return the current sync time
-     */
-    dfd.resolve("syncTime = now");
-
-    return dfd;
-};
+//var validateUser = function( guid ) {
+//    var dfd = $.Deferred();
+//
+//    console.log('validating user ... ');
+//    if (!guid) {
+//        dfd.reject("Invalid GUID");
+//    } else {
+//        // is in User table?
+//        // If not, generate UUID and insert
+//        var uuid = ADCore.util.createUUID();
+//        // create uuid, guid
+//        dfd.resolve(uuid);
+//    }
+//
+//    return dfd;
+//};
+//
+//
+//
+//
+//
+//var getTransactionsForUser = function( userUuid, lastSync ) {
+//    var dfd = $.Deferred();
+//    console.log('getting transactions to send ');
+//    /*
+//    Filter transaction log by user and last update time
+//
+//     */
+//    dfd.resolve("log");
+//
+//    return dfd;
+//};
+//
+//var applyTransactionsFromUser = function( userUuid, log ) {
+//    var dfd = $.Deferred();
+//    console.log('applying transactions from user ');
+//    /*
+//    Apply changes from the user
+//    Add each entry to the transaction log
+//    Return the current sync time
+//     */
+//    dfd.resolve("syncTime = now");
+//
+//    return dfd;
+//};
 
 

@@ -44,8 +44,8 @@ module.exports = function(req, res, next) {
     var lastTime = new Date(parseInt(req.param('lastSyncTimestamp'), 10));
     var userId = req.appdev.userUUID;
 
-console.log('  - userId['+userId+']');
-console.log('  - lastTime['+lastTime+']');
+    console.log('  - userId['+userId+']');
+    console.log('  - lastTime['+req.param('lastSyncTimestamp')+'] -> DateTime['+lastTime+']');
 
     NSServerTransactionLog.getLogForUser(userId, lastTime, function(err, data){
         if (err) {
@@ -59,16 +59,6 @@ console.log('  - lastTime['+lastTime+']');
             next();
         }
     });
-//    // Reading Transaction logs and storing in req.appdev.transactionlogs:
-//    req.appdev.transactionLog=[{
-//        "operation": "create",
-//        "model:": "Campus",
-//        "multilingual": false,
-//        "params": {
-//            "uuid": "01234567890abcdef",
-//            "language_code": "en",
-//            "name": "UAH"
-//        }
-//    }];
+
 
 };

@@ -12,7 +12,8 @@
     "sails-mysql": "~0.9.9",
     "gma-api": "git://github.com/appdevdesigns/gma-api",
     "jquery": "~1.8.3",
-    "node-uuid": "^1.4.1"
+    "node-uuid": "^1.4.1",
+    "async": "~0.2.10"
   },
   "devDependencies": {
     "mocha": "^1.17.1",
@@ -21,7 +22,7 @@
   "scripts": {
     "start": "node app.js",
     "debug": "node debug app.js",
-    "test":  "./node_modules/.bin/mocha --reporter dot test/*.js"
+    "test": "./node_modules/.bin/mocha --reporter dot test/*.js"
   },
   "main": "app.js",
   "repository": "",

@@ -7,12 +7,12 @@
  */
 
 module.exports = {
-        
+
     tableName : 'nextsteps_contact_step',
 
     attributes: {
 
- 
+
         contactstep_uuid	: 'STRING',
 
 
@@ -22,7 +22,7 @@ module.exports = {
         step_uuid	: 'STRING',
 
 
-        step_date	: 'STRING'
+        step_date	: 'DATE'
     }
 
 };
