@@ -33,7 +33,7 @@ module.exports = {
                 // Get campus transaction entry
                 DBHelper.addTransaction('create', campus, user)
                 .then(function(){
-                    cb(null);
+                    cb();
                 })
                 .fail(function(err){
                     cb(err);

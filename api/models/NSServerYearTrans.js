@@ -20,6 +20,13 @@ module.exports = {
 
 
         year_label	: 'STRING'
+    },
+    
+    /*
+     * @return model for translation table
+     */ 
+    getTransModel : function() {
+        return NSServerYearTrans;
     }
 
 };

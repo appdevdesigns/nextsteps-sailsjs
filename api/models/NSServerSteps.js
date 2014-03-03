@@ -164,6 +164,13 @@ module.exports = {
              return dfd;
          }
 
+    }, // attributes
+    
+    /*
+     * @return model for translation table
+     */ 
+    getTransModel : function() {
+        return NSServerStepsTrans;
     },
     
     // Life cycle callbacks

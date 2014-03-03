@@ -228,16 +228,16 @@ module.exports = {
                         
             switch(xaction.model){
                 
-//                case 'Campus':
-//                    DBHelper.applyCampusTransaction(userUUID, xaction.operation, xaction.params)
-//                    .then(function(){
-//                        dfd.resolve();
-//                    })
-//                    .fail(function(err){
-//                        dfd.reject(err);
-//                    });
-//                    break;
-//                    
+                case 'Campus':
+                    DBHelper.applyCampusTransaction(userUUID, xaction.operation, xaction.params)
+                    .then(function(){
+                        dfd.resolve();
+                    })
+                    .fail(function(err){
+                        dfd.reject(err);
+                    });
+                    break;
+                    
                 case 'Contact':
                      DBHelper.applyContactTransaction(userUUID, xaction.operation, xaction.params)
                     .then(function(){
@@ -271,133 +271,108 @@ module.exports = {
              case 'create':
                  
                  // TODO: check to see if campus already exists
-                 
-                 // Create campus entry
-                 var campusParms = {};
-                 campusParms.campus_uuid = params.campus_uuid;
-                 campusParms.node_id = 0; // client created campuses have no node id.
-                 
-                 NSServerCampus.create(campusParms)
-                 .done(function(err, campus){
-                     if (err) {
-                         dfd.reject(err);
-                     } else {
-                         
-                         // Add translation
-                         var campusTransParms = {};
-                         campusTransParms.language_code = params.language_code;
-                         campusTransParms.campus_label = params.campus_label;
-                         if (params.long_name){
-                             campusTransParms.long_name = params.long_name;
-                         }
-                         campus.addTranslation(campusTransParms)
-                         .then(function(){
-                             
-                             // Add entry to association table
-                             NSServerUserCampus.create({
-                                 user_uuid:userUUID,
-                                 campus_uuid:campus.campus_uuid
-                             })
-                             .done(function(err, userCampus) {
-                                 if(err){
-                                     // Unable to add record to joining model
-                                     // Destroy orphaned records, ignore return status
-                                     NSServerCampus.destroy({campus_uuid : campus.campus_uuid})
-                                     .done(function(err){}); // done handler required 
-                                     NSServerCampusTrans.destroy({campus_id : campus.campus_id})
-                                     .done(function(err){}); // done handler required
-                                     
-                                     dfd.reject(err);
-                                     
-                                 } else {
-                                     console.log('Added new campus for user ' + userUUID);
-                                     dfd.resolve();
-                                 }
-                             });
+                 DBHelper.multilingualCreate(NSServerCampus, params)
+                 .then(function(campus){
+                     // Add entry to association model
+                      var ucParms = {user_uuid : userUUID, 
+                             campus_uuid : campus.campus_uuid};
                       
-                         })
-                         .fail(function(err){
-                             // We failed to add translation, remove previously added campus entry
-                             NSServerCampus.destroy({campus_uuid: campusParms.campus_uuid})
-                             .done(function(err, obj) {}); // ignore return, .done required
-                             
+                     NSServerUserCampus.create(ucParms)
+                     .done(function(err, userCampus){
+                         if (err) {
+                             // Failed to add entry to association table,
+                             // remove previous created entry
+                             DBHelper.multilingualDestroy(NSServerCampus, {id : campus.id}, 'campus_id')
+                             .then(function(){}) // ignore return status
+                             .fail(function(err){});
                              dfd.reject(err);
-                             
-                         });
-                     }
-
+                         } else {
+                             console.log('Created campus entry ' + campus.campus_uuid + ' for user ' + userUUID);
+                             dfd.resolve();
+                         }
+                     });
+                 })
+                 .fail(function(err){
+                     dfd.reject(err);
                  });
+                 // Create campus entry
                  
                  break; // create
                  
              case 'update':
-                 // Get campus entry
-                 // Check for userModifyRestricted
-                 // return or make update
                  
-                 NSServerCampus.findOne({campus_uuid : params.campus_uuid})
+                 NSServerCampus.findOne({campus_uuid: params.campus_uuid})
                  .done(function(err, campus){
-                     if (err){
-                         dfd.reject(err);
-                     } else {
-                         if (campus.userModifyRestricted) {
-                             // User not allowed to update campus
+                     if(!err) {
+                         if ( ! campus.userModifyRestricted() ) {
+                             var transParms = {};
+                             if ( undefined != params.campus_label )
+                                 transParms.campus_label = params.campus_label;
+                             if ( undefined != params.long_name )
+                                 transParms.long_name = params.long_name;
+                             
+                             var criteria = { campus_id     : campus.id, 
+                                              language_code : params.language_code
+                                            };
+                             
+                             NSServerCampusTrans.update(criteria, transParms)
+                             .done(function(err, trans){
+                                 if (!err) {
+                                     console.log('Updated campus entry for campus ' + campus.campus_uuid);
+                                     dfd.resolve();
+                                 } else {
+                                     dfd.reject(err);
+                                 }
+                             });
+                             
+                         } else {                            
+                             console.log('Unable to update campus entry, permission denied');
+                             dfd.resolve(); // Continue processing transaction log
                          }
-                     }
-                 })
-                 // NOTE: Syntax difference when calling update, no .done() method
-                 NSServerContact.update({campus_uuid : params.campus_uuid}, params, 
-                         function(err, contact){
-                     if (err){
+                       
+                     } else { // Unable to find campus
                          dfd.reject(err);
-                     } else {
-                         console.log('Updated contact ' + params.contact_uuid + 
-                                 ' for user ' + userUUID);
-                         dfd.resolve();
                      }
                  });
-                 break; // update
+                  break; // update
 
              case 'destroy':
 
-                 NSServerUserContact.find({contact_uuid:params.contact_uuid})
-                .done(function(err, userContacts){
-                    if(err){
-                        dfd.reject(err);
-                    } else {
-                        // Destroy joining model entry, ignore return
-                         NSServerUserContact.destroy(
-                            {user_uuid:userUUID, 
-                            contact_uuid:params.contact_uuid})
-                        .done(function(err){
-                            console.log('Destroyed contact ' + params.contact_uuid +
-                                    ' for user ' + userUUID);
+                 NSServerCampus.findOne({campus_uuid: params.campus_uuid})
+                 .done(function(err, campus){
+                     if(err) {
+                         dfd.reject(err);  
+                     } else if (undefined == campus) {
+                         // campus not found
+                         dfd.resolve();
+                     } else {
+                         // Determine if campus can be destroyed
+                         if ( ! campus.userModifyRestricted() ) {
+                             DBHelper.multilingualDestroy(NSServerCampus, {campus_uuid : params.campus_uuid}, 'campus_id')
+                             .then(function(){
+                                 console.log('Deleted campus ' + params.campus_uuid + ' for user ' + userUUID);
+                                  dfd.resolve();
+                              })
+                              .fail(function(err){
+                                  dfd.reject(err);
+                              });
 
-                            // If the user is the only person related to this contact,
-                            // destroy the contact. Otherwise, someone else is using
-                            // the same contact so we keep it.
-                            if ( 1 == userContacts.length ) {
-                                console.log('destroying contact');
-                                // Destroy contact, ignore return
-                                NSServerContact.destroy({contact_uuid:params.contact_uuid})
-                                .done(function(err){
-                                    dfd.resolve();
-                                }); 
-                                
-                            } else {
-                                dfd.resolve();
-                            }
-                        });                         
-                     }
-                        
-                });
-                break; // destroy
+                          } else {
+                              console.log('Failed to delete campus, permission denied');
+                              dfd.resolve(); // Continue processing transaction log                        
+                          }
+                      }
+                 });
+
+              break; // destroy
 
              default: // unrecognized operation
                  var err = new Error('Unrecognized operation in client transaction for Campus model');
                  dfd.reject(err);
                  break; // default
-        } // switch
+         } // switch
+         
+         return dfd;
          
      }, // applyCampusTransaction
      
@@ -473,7 +448,7 @@ module.exports = {
                              if ( 1 == userContacts.length ) {
                                  console.log('destroying contact');
                                  // Destroy contact, ignore return
-                                 NSServerContact.destroy({contact_uuid:params.contact_uuid})
+                                 NSServerContact.destroy({ contact_uuid : params.contact_uuid})
                                  .done(function(err){
                                      dfd.resolve();
                                  }); 
@@ -496,8 +471,106 @@ module.exports = {
          
          return dfd;
          
-     } // applyContactTransaction
+     }, // applyContactTransaction
 
+     /*
+      * Function to create an entry in the primary and translation tables for a model.
+      * @param model - model definition for primary table, e.g. NSServerCampus
+      * @param params - parameters for new entry (JSON object)
+      * @return jquery deferred object
+      */
+     multilingualCreate : function(model, params) {
+         
+         var dfd = $.Deferred();
+         
+         var modelTrans = null;
+         if ( undefined != model.getTransModel) {
+             modelTrans = model.getTransModel();
+         };
+         
+         var someParms = {};
+         for (key in model.attributes) {
+             someParms[key] = params[key];
+         }
+         
+         model.create(someParms)
+         .done(function(err, entry){
+             if (!err) {
+                 if (! modelTrans) {
+                     // No translation model, we're done
+                     dfd.resolve(entry); // Return entry
+                 } else {
+                     // Gather translation parameters and create entry in translation model
+                     var transParms = {};
+                     for (key in modelTrans.attributes) {
+                         if (undefined != params[key]) {
+                             transParms[key] = params[key];                  
+                         }
+                     }
+                      
+                     entry.addTranslation(transParms)
+                     .then(function(){
+                         dfd.resolve(entry); // Return entry
+
+                     })
+                     .fail(function(err){
+                         // Failed to create entry in translation model
+                         // Need to destroy entry in primary model, ignore return value
+                         model.destroy({id : entry.id})
+                         .done(function(err) {}); // .done required
+                         dfd.reject(err);                  
+                     });
+                      
+                  }
+             } else {
+                 dfd.reject(err);
+             }
+          });
+         
+         return dfd;
+     },
+ 
+     /*
+      * Function to destroy an entry in the primary table and all entries in the associated
+      * translation table for a model.
+      * @param model - model definition for primary table, e.g. NSServerCampus
+      * @param params - parameters used to identify entry in primary table (JSON object)
+      * @param field - field name used to associate the translation table to primary table.
+      * @return jquery deferred object
+      */
+     // TODO: refactor this so we don't need the field parameter
+     multilingualDestroy : function(model, params, field){
+         
+         var dfd = $.Deferred();
+         
+         var modelTrans = null;
+         if (undefined != model.getTransModel) {
+             modelTrans = model.getTransModel();
+         };
+         
+         model.findOne(params)
+         .done(function(err, entry){
+             if (!err) {
+                 var criteria = {};
+                 criteria[field] = entry.id;
+                 if(modelTrans) {
+                     modelTrans.destroy(criteria)
+                     .done(function(err){}); // ignore return status
+                 }
+                 model.destroy(params)
+                 .done(function(err){
+                     dfd.resolve(); // ignore return status
+                 });
+                 
+             } else {
+                 // Entry couldn't be found, equivalent to destroy so we call dfd.resolve()
+                 dfd.resolve();
+             }
+         });
+         
+         return dfd;
+         
+     }
      
 };
 

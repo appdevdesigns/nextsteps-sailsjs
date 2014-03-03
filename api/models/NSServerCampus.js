@@ -134,6 +134,12 @@ module.exports = {
     
   }, // attributes
 
+  /*
+   * @return model for translation table
+   */ 
+  getTransModel : function() {
+      return NSServerCampusTrans;
+  },
 
   // Life cycle callbacks
   afterCreate: function(newEntry, cb) {

@@ -13,81 +13,132 @@ var testClientData = {
         'password' : 'manila',
         'lastSyncTimestamp': '',
         'appVersion': '0.0.1',
-        'transactionLog': [{
-            'operation': 'create',
-            'model': 'Contact',
-            'params': {
-                'contact_uuid'      : '01234567890abcdef',
-                'contact_firstname' : 'Samuel',
-                'contact_lastname'  : 'Smith',
-                'contact_nickname'  : 'Sam',
-                'campus_uuid'       : 'mycampusuuid',
-                'year_id'           : '1',
-                'contact_phone'     : '123-456-7890',
-                'contact_email'     : 'sam.smith@gmail.com',
-                'contact_notes'     : 'blond hair'             
-            }           
-        },
-        {
-            'operation': 'create',
-            'model': 'Contact',
-            'params': {
-                'contact_uuid'      : '234567890abcdef01',
-                'contact_firstname' : 'Susan',
-                'contact_lastname'  : 'Smith',
-                'contact_nickname'  : 'Sue',
-                'campus_uuid'       : 'mycampusuuid',
-                'year_id'           : '1',
-                'contact_phone'     : '123-456-7890',
-                'contact_email'     : 'susan.smith@gmail.com',
-                'contact_notes'     : 'wife of Sam'             
-            }
-        },
-        {
-            'operation': 'create',
-            'model': 'Contact',
-            'params': {
-                'contact_uuid'      : '234567890abcdefxx',
-                'contact_firstname' : 'Jason',
-                'contact_lastname'  : 'Smith',
-                'contact_nickname'  : '',
-                'campus_uuid'       : 'anothercampusuuid',
-                'year_id'           : '3',
-                'contact_phone'     : '123-456-7890',
-                'contact_email'     : 'jason.smith@gmail.com',
-                'contact_notes'     : ''             
-            }
-        },
-        {
-            'operation': 'update',
-            'model': 'Contact',
-            'params': {
-                'contact_uuid'      : '234567890abcdef01',
-                'contact_firstname' : 'Susan',
-                'contact_lastname'  : 'Smith',
-                'contact_nickname'  : 'Susie',
-                'campus_uuid'       : 'mycampusuuid',
-                'year_id'           : '2',
-                'contact_phone'     : '123-456-7890',
-                'contact_email'     : 'susan.smith@gmail.com',
-                'contact_notes'     : 'wife of Sam'             
-            }
-        },
-        {
-            'operation': 'destroy',
-            'model': 'Contact',
-            'params': {
-                'contact_uuid'      : '234567890abcdefxx',
-                'contact_firstname' : 'Jason',
-                'contact_lastname'  : 'Smith',
-                'contact_nickname'  : '',
-                'campus_uuid'       : 'anothercampusuuid',
-                'year_id'           : '3',
-                'contact_phone'     : '123-456-7890',
-                'contact_email'     : 'jason.smith@gmail.com',
-                'contact_notes'     : ''             
-            }
-        }]        
+        'transactionLog': [
+                           {
+                               'operation': 'create',
+                               'model': 'Campus',
+                               'params': {
+                                   'campus_uuid'      : '01234567890abcdef',
+                                   'node_id'           : '0',
+                                   'language_code'     : 'en',
+                                   'campus_label'      : 'USU'
+                                }
+                           },
+                           {
+                               'operation': 'create',
+                               'model': 'Campus',
+                               'params': {
+                                   'campus_uuid'      : '34567890abcdef012',
+                                   'node_id'           : '0',
+                                   'language_code'     : 'en',
+                                   'campus_label'      : 'UofU'
+                                }
+                           },
+                           {
+                               'operation': 'create',
+                               'model': 'Campus',
+                               'params': {
+                                   'campus_uuid'      : 'abcdef01234567890',
+                                   'node_id'           : '0',
+                                   'language_code'     : 'en',
+                                   'campus_label'      : 'MSU'
+                                }
+                           },
+                           {
+                               'operation': 'update',
+                               'model': 'Campus',
+                               'params': {
+                                   'campus_uuid'      : '34567890abcdef012',
+                                   'node_id'           : '0',
+                                   'language_code'     : 'en',
+                                   'campus_label'      : 'XSU',
+                                   'long_name'         : 'Xavier State University'
+                                }
+                           },
+                           {
+                               'operation': 'destroy',
+                               'model': 'Campus',
+                               'params': {
+                                   'campus_uuid'      : 'abcdef01234567890'
+                                }
+                           },
+                           
+//       {
+//           'operation': 'create',
+//           'model': 'Contact',
+//           'params': {
+//               'contact_uuid'      : '01234567890abcdef',
+//               'contact_firstname' : 'Samuel',
+//               'contact_lastname'  : 'Smith',
+//               'contact_nickname'  : 'Sam',
+//               'campus_uuid'       : 'mycampusuuid',
+//               'year_id'           : '1',
+//               'contact_phone'     : '123-456-7890',
+//               'contact_email'     : 'sam.smith@gmail.com',
+//               'contact_notes'     : 'blond hair'             
+//           }           
+//        },
+//        {
+//            'operation': 'create',
+//            'model': 'Contact',
+//            'params': {
+//                'contact_uuid'      : '234567890abcdef01',
+//                'contact_firstname' : 'Susan',
+//                'contact_lastname'  : 'Smith',
+//                'contact_nickname'  : 'Sue',
+//                'campus_uuid'       : 'mycampusuuid',
+//                'year_id'           : '1',
+//                'contact_phone'     : '123-456-7890',
+//                'contact_email'     : 'susan.smith@gmail.com',
+//                'contact_notes'     : 'wife of Sam'             
+//            }
+//        },
+//        {
+//            'operation': 'create',
+//            'model': 'Contact',
+//            'params': {
+//                'contact_uuid'      : '234567890abcdefxx',
+//                'contact_firstname' : 'Jason',
+//                'contact_lastname'  : 'Smith',
+//                'contact_nickname'  : '',
+//                'campus_uuid'       : 'anothercampusuuid',
+//                'year_id'           : '3',
+//                'contact_phone'     : '123-456-7890',
+//                'contact_email'     : 'jason.smith@gmail.com',
+//                'contact_notes'     : ''             
+//            }
+//        },
+//        {
+//            'operation': 'update',
+//            'model': 'Contact',
+//            'params': {
+//                'contact_uuid'      : '234567890abcdef01',
+//                'contact_firstname' : 'Susan',
+//                'contact_lastname'  : 'Smith',
+//                'contact_nickname'  : 'Susie',
+//                'campus_uuid'       : 'mycampusuuid',
+//                'year_id'           : '2',
+//                'contact_phone'     : '123-456-7890',
+//                'contact_email'     : 'susan.smith@gmail.com',
+//                'contact_notes'     : 'wife of Sam'             
+//            }
+//        },
+//        {
+//            'operation': 'destroy',
+//            'model': 'Contact',
+//            'params': {
+//                'contact_uuid'      : '234567890abcdefxx',
+//                'contact_firstname' : 'Jason',
+//                'contact_lastname'  : 'Smith',
+//                'contact_nickname'  : '',
+//                'campus_uuid'       : 'anothercampusuuid',
+//                'year_id'           : '3',
+//                'contact_phone'     : '123-456-7890',
+//                'contact_email'     : 'jason.smith@gmail.com',
+//                'contact_notes'     : ''             
+//            }
+//        }
+        ]        
 };
 
 module.exports = function(req, res, next) {
