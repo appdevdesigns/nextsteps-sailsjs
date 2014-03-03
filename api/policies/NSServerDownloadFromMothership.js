@@ -29,6 +29,8 @@ module.exports = function(req, res, next) {
 
         externalSystems[sails.config.nsserver.externalSystem](req,res)
         .fail(function(err){
+            console.log('---> sending Error:');
+            console.log(err);
             ADCore.comm.error(res, err);
         })
         .then(function( data ){
@@ -263,6 +265,8 @@ var addUserToNodes = function(userUUID, nodes) {
     }
     return dfd;
 };
+
+
 
 var getCampusesForUser = function(userUUID) {
     var dfd = $.Deferred();

@@ -196,6 +196,7 @@ module.exports = {
 
 //// TODO: implement the authentication so we can have a user object.
             return {
+                    GUID:'jon.vellacott',
                     hasPermission:function() {return true;},
                     getLanguageCode:function() {return 'en';}
             };
@@ -216,12 +217,13 @@ module.exports = {
 //            return req.session.appdev.actualUser;
 //// TODO: implement the authentication so we can have a user object.
             return {
+                    GUID:'jon.vellacott',
                     hasPermission:function() {return true;},
                     getLanguageCode:function() {return 'en';}
            };
         }
     },
-    
+
     util: {
         createUUID: function() {
             var uuid = require('node-uuid');

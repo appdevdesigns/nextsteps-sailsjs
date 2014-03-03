@@ -41,18 +41,20 @@
 module.exports = function(req, res, next) {
 
     console.log('preparing outgoing data ...');
-    var lastTime = req.param('lastSyncTimestamp');
+    var lastTime = new Date(parseInt(req.param('lastSyncTimestamp'), 10));
     var userId = req.appdev.userUUID;
 
-console.log('userId['+userId+']');
-console.log('lastTime['+lastTime+']');
+console.log('  - userId['+userId+']');
+console.log('  - lastTime['+lastTime+']');
 
     NSServerTransactionLog.getLogForUser(userId, lastTime, function(err, data){
         if (err) {
             // exit policy chain w/o calling next();
-            ADCore.comm.error(res, 'Failed to obtain transaction log, ' + err); 
+            ADCore.comm.error(res, 'Failed to obtain transaction log, ' + err);
         }
         else {
+            console.log('  - client transactions:');
+            console.log(data);
             req.appdev.transactionLog = data;
             next();
         }

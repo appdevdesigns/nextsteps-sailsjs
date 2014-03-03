@@ -8,22 +8,35 @@
  */
 module.exports = function(req, res, next) {
 
+    console.log();
+    console.log();
+    console.log('--------------------------------------------------');
     console.log('validate user ... ');
     req.appdev = {};
+    console.log();
+    console.log('from ip addr: '+req.connection.remoteAddress);
+    console.log();
+    console.log('provided params:');
+    console.log(req.body);
+    console.log(req.query);
+    console.log(req.data);
+    console.log();
 
     // TODO: Implement ADCore.user.current(req).GUID,
     // Assign userLang from session information
-//    var guid = ADCore.user.current(req).GUID;
-    var userGuid = null;
-    var userLang = 'en'; // get user default language from session info
+    var userGuid = ADCore.user.current(req).GUID;
+    var userLang = ADCore.user.current(req).getLanguageCode(); // get user default language from session info
+
+
     if ( req.param('test') ) {
 
         userGuid = '9ACB3BAC-C706-5096-4ED0-2557002E3ADE';
         req.body.lastSyncTimestamp = Date.now() - 10;
         req.body.username = 'jon@vellacott.co.uk';
         req.body.password = 'manila';
-   }
-    else if ( req.param('test2') ) {
+
+   } else if ( req.param('test2') ) {
+
         userGuid = '5678';
         req.body.lastSyncTimestamp = Date.now() - 10;
     }
@@ -40,7 +53,8 @@ module.exports = function(req, res, next) {
 
         else if (userObj) {
 
-            endValidation('Found existing user, uuid = ' + userObj.user_uuid, req, userObj, next);
+            var text = 'Found existing user, uuid = ' + userObj.user_uuid + '  guid='+userObj.user_guid;
+            endValidation(text, req, userObj, next);
 
         }
 
@@ -54,7 +68,8 @@ module.exports = function(req, res, next) {
                     ADCore.comm.error(res, 'Failed to create user during sync: ' + err);
                 } else {
 
-                    endValidation('Created new user record for GUID ' + userGuid, req, userObj, next);
+                    var text = 'Created new user record for GUID = ' + userGuid
+                    endValidation(text, req, userObj, next);
                 }
             });
         } // else

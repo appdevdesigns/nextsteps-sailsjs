@@ -18,23 +18,28 @@ module.exports = {
         console.log('GMA.download() ...');
 
         // Sync the Data from GMA
-
         var userID = req.param('username');
         var password = req.param('password');
-            //req.appdev.userUUID = 'UUID';
-            // setupGMA
+
+//// TODO: this is only for testing at Hack-a-thon
+        if ((userID != 'jon@vellacott.co.uk')
+                || (password != 'manila')) {
+            console.log('  *** userID['+userID+'] pword['+password+']');
+            dfd.reject(new Error('Invalide GMA User'));
+            return dfd;
+        }
+
         setupGMA(userID, password)
         .fail(function(err){
+
             console.log();
             console.error(' *** error attempting to setupGMA():');
             console.log(err);
             dfd.reject(err);
+
         })
         .then(function(gma){
-
-//console.log('GMA setup done...');
-//console.log(gma);
-
+console.log('  - authenticated in GMA');
 
             for (var id in gma.measurements) {
                 var newMeasurementList = [];
@@ -43,33 +48,9 @@ module.exports = {
                    newMeasurementList.push(measurement.data);
                 });
                 gma.measurements[id] = newMeasurementList;
+
             }
 
-/*
-//// Temporary Testing options:
-if (typeof req.param('test2') != 'undefined') {
-    gma.assignments[101] = 'Assign1b';
-    gma.assignments[199] = 'Assign3';
-    gma.measurements[101][1].measurementName = 'NAME2';
-    gma.measurements[101][1].measurementDescription = 'DESC2';
-    gma.measurements[120].push(
-           {
-               measurementId: 25,
-               measurementName: "name4a",
-               measurementDescription: "desc4a",
-               measurementValue: 33
-           });
-
-    gma.measurements[199] = [
-          {
-              measurementId: 92,
-              measurementName: "name1b",
-              measurementDescription: "desc1b",
-              measurementValue: 33
-          }];
-    req.appdev.userUUID = 'UUID2';
-}
-*/
             dfd.resolve(gma);
 
         });
@@ -84,6 +65,10 @@ if (typeof req.param('test2') != 'undefined') {
         var dfd = $.Deferred();
 
         console.log('GMA.upload() ...');
+
+
+
+
 
         dfd.resolve();
 
@@ -125,7 +110,7 @@ var setupGMA = function( username, password ) {
     })
     .done(function(){
 //console.log("gma.loginDrupal().done():  success");
-        console.log(gma.GUID, gma.preferredName, gma.renId);
+        console.log('  - gma auth results: GID['+gma.GUID+']  '+gma.preferredName+'   '+gma.renId);
 
 //console.log("\nFetching user assignments...");
         gma.getAssignments()
@@ -135,6 +120,8 @@ var setupGMA = function( username, password ) {
             dfd.reject(err);
         })
         .done(function(byID, byName, list) {
+
+            console.log("  - gma returned "+list.length+' assignments');
 
             gmaData.assignments = byID;
             gmaData.measurements = {};
@@ -148,6 +135,7 @@ var setupGMA = function( username, password ) {
                         dfd.reject(err);
                     })
                     .then(function(listMeasurements){
+                        console.log('    - assignment '+assignment.nodeId+' has '+listMeasurements.length+' measurements ');
                         gmaData.measurements[assignment.nodeId] = listMeasurements;
                         numDone++;
                         if (numDone >= list.length) {
@@ -160,55 +148,6 @@ var setupGMA = function( username, password ) {
 
         });
     });
-
-/*
-    var dummy = {
-        assignments: { 101: "Assign1", 120: "Assign2"},
-        measurements: {
-            101: [
-            {
-                measurementId: 12,
-                measurementName: "name1",
-                measurementDescription: "desc1",
-                measurementValue: 33
-            },
-            {
-                measurementId: 13,
-                measurementName: "name2",
-                measurementDescription: "desc2",
-                measurementValue: 33
-            },
-            {
-                measurementId: 14,
-                measurementName: "name3",
-                measurementDescription: "desc3",
-                measurementValue: 33
-            }],
-
-
-            120: [
-              {
-                  measurementId: 22,
-                  measurementName: "name1a",
-                  measurementDescription: "desc1a",
-                  measurementValue: 33
-              },
-              {
-                  measurementId: 23,
-                  measurementName: "name2a",
-                  measurementDescription: "desc2a",
-                  measurementValue: 33
-              },
-              {
-                  measurementId: 24,
-                  measurementName: "name3a",
-                  measurementDescription: "desc3a",
-                  measurementValue: 33
-            }]
-        }
-    };
-    dfd.resolve(dummy);
-*/
 
     return dfd;
 };

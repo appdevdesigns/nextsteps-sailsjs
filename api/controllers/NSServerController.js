@@ -24,6 +24,11 @@ module.exports = {
    */
   ping: function (req, res) {
 
+      console.log('---------------------');
+      console.log('Ping ...');
+      console.log('from ip addr: '+req.connection.remoteAddress);
+      console.log();
+
     // Send a JSON response
     return res.json({
       status: 'pong'
@@ -36,10 +41,33 @@ module.exports = {
    *    `/nsserver/auth`
    */
   auth: function (req, res) {
-    // Send a JSON response
-    return res.json({
-      status: 'success'
-    });
+      // TODO: for testing: these are valid users:
+      var validUsers = {
+              'jon@vellacott.co.uk':'manila',
+              'lucia4070@nate.com':'manila'
+      }
+      var user = req.param('username');
+      var pword = req.param('password');
+
+      console.log('---------------------');
+      console.log('/nsserver/auth ...');
+      console.log('from ip addr: '+req.connection.remoteAddress);
+
+      if (validUsers[user] == pword) {
+          console.log('  -> auth success.');
+          console.log();
+          // Send a JSON response
+          return ADCore.comm.success(res, {});
+
+      } else {
+          console.log('  -> auth failure.');
+          console.log('  -> username:'+user);
+          console.log('  -> password:'+pword);
+          console.log();
+          var err = new Error('Invalid Username or password ');
+          return ADCore.comm.error(res, err);
+      }
+
   },
 
 
