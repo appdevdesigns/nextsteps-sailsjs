@@ -19,8 +19,12 @@ module.exports = {
 
     },
     
+    // ------------------------------------------------------
     // Life cycle callbacks
+    // ------------------------------------------------------
     afterCreate: function(newEntry, cb) {
+ 
+        // Following a create, we want to add a transaction for the associated user.
         // Get the campus and user
         NSServerCampus.findOne({ campus_uuid: newEntry.campus_uuid })
         .then(function(campus){
@@ -29,7 +33,7 @@ module.exports = {
                 // Get campus transaction entry
                 DBHelper.addTransaction('create', campus, user)
                 .then(function(){
-                    cb(null);
+                    cb();
                 })
                 .fail(function(err){
                     cb(err);
@@ -42,7 +46,6 @@ module.exports = {
         .fail(function(err){
             cb(err);
         });
-    }
-
+    } // afterCreate
 
 };

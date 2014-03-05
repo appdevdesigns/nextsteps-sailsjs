@@ -55,9 +55,14 @@ module.exports = {
                     dfd.resolve(xEntry);
                 }
             });
+        } else { // is destroy operation
+            if (cb) {
+                cb(xEntry);
+            }
+            dfd.resolve(xEntry);
         }
         return dfd;
-    },
+    }, // transaction
 
     addTranslation: function(transEntry, cb) {
         var dfd = $.Deferred();
@@ -76,7 +81,7 @@ module.exports = {
             dfd.reject(err);
         });
         return dfd;
-    },
+    }, // addTranslation
 
     trans:function(lang, cb) {
         // find the translations for this entry.
@@ -101,7 +106,7 @@ module.exports = {
         .fail(function(err){
             cb(err);
         });
-    },
+    }, // trans
 
 
 
@@ -130,9 +135,16 @@ module.exports = {
             dfd.reject(err);
         });
         return dfd;
-    }
-  },
+    } // users
+    
+  }, // attributes
 
+  /*
+   * @return model for translation table
+   */ 
+  getTransModel : function() {
+      return NSServerCampusTrans;
+  },
 
   // Life cycle callbacks
   afterCreate: function(newEntry, cb) {
