@@ -59,6 +59,14 @@ module.exports = {
                 cb(err);
             });
         } // trans
-    } // attributes
+        
+    }, // attributes
+    
+    /*
+     * @return model for translation table
+     */ 
+    getTransModel : function() {
+        return NSServerTagTrans;
+    }
 
 };

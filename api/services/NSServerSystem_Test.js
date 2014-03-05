@@ -1,8 +1,8 @@
 /**
- * NSServerSystem_GMA
+ * NSServerSystem_Test
  *
  * @module      :: Service
- * @description :: This is the driver for communicating with the GMA system.
+ * @description :: Test services to simulate communication with an external system.
  *
  */
 var $ = require('jquery');

@@ -7,80 +7,55 @@
  *
  */
 
-//var modelMap = {
-//    "Campus" : NSServerCampus,
-//    "Contact" : NSServerContact,
-//        
-//}
 
 module.exports = function(req, res, next) {
 
     console.log('process client data ...');
-
-    // do all that hard work here
-    var log = req.param('transactionLog');
     
-//    for ( var t = 0; t < log.length(); t++ )
-//        applyTransaction(req, res, log[t]);
+    var log = req.param('transactionLog');
+    if (undefined == log) {
+        //no transaction log
+        console.log('No client transactions');
+        next();
+        return;
+    }
+    
+     var userUUID = req.appdev.userUUID;
+     
+     processLog(log, userUUID, res, next);          
 
-    next();
 };
 
-//var applyTransaction = function(req, res, xaction){
-//
-//    var model = getServerModel(xaction.model);
-//    // if hasTrans, parse params 
-//    model.processTransaction(xaction.operation, xaction.params);
-//
-//    
-//}
-//
-//var getServerModel = function(clientModel){
-//    
-//    var serverModel = null;
-//    
-//    switch (clientModel) {
-//        case 'Campus':
-//            serverModel = NSServerCampus;
-//            break;
-//        case 'Contact':
-//            
-//        ContactStep
-//        ContactTag
-//        Group
-//        Step
-//        Tag
-//        Year
-//            
-//    }
-//}
-////Request format:
-//{
-//  "lastSyncTimestamp": 1234567890,
-//  "appVersion": "1.5.0",
-//  "transactionLog": [{
-//      "operation": "create",
-//      "model:": "Campus",
-//      "params": {
-//          "uuid": "01234567890abcdef",
-//          "language_code": "en",
-//          "name": "UAH"
-//      }
-//  }]
-//}
-//Response format:
-//{
-//  "status": success
-//  "data": {
-//      "lastSyncTimestamp": 1234567890,
-//      "transactionLog": [{
-//          "operation": "create",
-//          "model:": "Campus",
-//          "params": {
-//              "uuid": "01234567890abcdef",
-//              "language_code": "en",
-//              "name": "UAH"
-//          }
-//      }]
-//  }
-//}
+// Recursive transaction log processing function
+// We need to do this so that each transaction completes before processing the next.
+// TODO: Refactor this to be non-recursive
+var processLog = function(log, userUUID, res, next){
+    
+    var xAction = log.shift();
+    if ( (undefined == xAction) || 
+            (undefined == xAction.model) ||
+            (undefined == xAction.operation) ||
+            (undefined == xAction.params)) {
+
+        var err = new Error('Attempted to apply invalid transaction from client');
+        ADCore.comm.error(res, err);
+        return;
+    }
+
+    DBHelper.applyClientTransaction(userUUID, xAction)
+    .then(function(data){
+        if (0 == log.length) { // We're done, signal next policy
+            next();
+        } else { // recurse with next transaction
+            processLog(log, userUUID, res, next);     
+        }
+    })
+    .fail(function(err){            
+        // TODO: rollback ?
+        // respond with an error
+        ADCore.comm.error(res, err);
+    });
+};
+
+
+
