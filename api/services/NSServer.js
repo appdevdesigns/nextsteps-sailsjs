@@ -3,7 +3,6 @@
  *
  * @module      :: Service
  * @description :: This is handles the sync service for NextSteps Server
-
  *
  */
 var $ = require('jquery');
@@ -51,7 +50,7 @@ module.exports = {
 
         if (typeof systemNone[key] == 'undefined') {
 
-            console.log('*** NSServer.externalSystems() called with invalid key ['+key+']');
+            console.log('*** NSServer.externalSystems() called with unknown system action ['+key+']');
             return {};
 
         } else {

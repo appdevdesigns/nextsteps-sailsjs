@@ -170,9 +170,7 @@ module.exports = function(req, res, next) {
 
         testClientData.lastSyncTimestamp = Date.now() - 10;
 
-        for( var key in testClientData) {
-            req.body[key] = testClientData[key];
-        }
+
 
    } else if ( req.param('test2') ) {
 

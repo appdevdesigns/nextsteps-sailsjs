@@ -1,9 +1,11 @@
-var nssSync = require('../api/services/NSServer.js');
-var ADCore = require('../api/services/ADCore.js');
 
-var assert = require('chai').assert;
+var ADUtil = require('./helpers/util_helper.js');
+var sails = null;
+var nsserver = null;
+
 var $ = require('jquery');
 
+/*
 var request = function(data) {
     this.data = data;
     this.session = {};
@@ -35,11 +37,62 @@ var reqData = {
 
 var resExpectError = {};
 var resNoError = {};
+*/
 
-describe('NSS Sync Service: ', function () {
-  before(function(){
-  });
 
+var assert = require('chai').assert;
+describe('services/NSSSync.js : ', function () {
+    before(function(done){
+        this.timeout(40000);
+
+        var initDone = ADUtil.testingDBInit({
+            models:[],
+            dataPaths:[]
+        });
+        $.when(initDone).then(function(data){
+            sails = data;
+            done();
+        })
+        .fail(function(err){
+            done(err);
+        });
+    });
+
+    describe ('ExternalSystems() : ', function (){
+        var knownInterfaces = {
+                download:1,
+                upload:1,
+                validateUser:1,
+                test:1
+        };
+        var knownExternalSystems = {
+                'none':1,
+                'test':1,
+                'GMA':1
+        };
+
+        // for each expected interface method()
+        for (var i in knownInterfaces) {
+
+            it('system['+i+'] defined', function(){
+                var system = NSServer.externalSystems(i);
+                assert.ok(system,' system is defined');
+
+                // make sure an option for each system is defined
+                for (var a in knownExternalSystems) {
+                    if (system[a]) {
+                        assert.ok(true, ' system '+a+'.'+i+'() found.');
+                    } else {
+                        assert.ok(false, ' system '+a+'.'+i+'() NOT found!');
+                    }
+                }
+            });
+
+        }
+
+    });
+
+/*
   it ('Good Request', function (){
     var req = new request(reqData);
     ADCore.auth.markAuthenticated(req, 'GUID1');
@@ -115,5 +168,6 @@ describe('NSS Sync Service: ', function () {
           assert.ok(true, 'Expected failure');
       });
   });
+*/
 
 });

@@ -18,7 +18,7 @@ module.exports.nsserver = {
   externalSystem:'test',    // ['none', 'test', 'GMA' ]
 
   // The url to the gma server you want to sync with
-  gmaBaseURL: "http://gma.zteam.biz/",
+  gmaBaseURL: "http://gma.server.here/",
 
   // the CAS url to authenticate with for GMA
   casURL: "https://signin.dodomail.net/cas"

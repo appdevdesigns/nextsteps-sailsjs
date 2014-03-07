@@ -10,6 +10,10 @@ var GMA = require('gma-api');
 var async = require('async');
 
 
+var TestMap = {
+};
+
+
 module.exports = {
 
 
@@ -246,10 +250,21 @@ next user
 
 
     // These are for exposing private functions for testing only
-    test: {
-//        loginGMA:function(){  },
+    // usage:  test('functionName', arg1, arg2, ... argN);
+    //
+    test: function() {
 
-
+        if (sails.config.environment != 'production') {
+            var args = Array.prototype.slice.call(arguments);
+            var key = args.shift();
+            if (TestMap[key]) {
+                return TestMap[key].apply(undefined, args);
+            } else {
+                console.log('*** function ['+key+'] not found in testMap');
+            }
+        } else {
+            console.log('*** Can\'t use test() in a production environment');
+        }
     },
 
 
@@ -291,13 +306,7 @@ next user
 
         var userID = req.param('username');
         var password = req.param('password');
-//// TODO: this is only for testing at Hack-a-thon
-if ((userID != 'jon@vellacott.co.uk')
-        || (password != 'manila')) {
-    console.log('  *** userID['+userID+'] pword['+password+']');
-    dfd.reject(new Error('Invalide GMA User'));
-    return dfd;
-}
+
         loginGMA(userID, password)
         .fail(function(err){
             if (cb) cb(err);
@@ -356,10 +365,13 @@ var loginGMA = function(username, password) {
         gmaBase: sails.config.nsserver.gmaBaseURL,
         casURL: sails.config.nsserver.casURL
     });
+console.log(gma);
 
-    gma.loginDrupal(username, password)
+    gma.login(username, password)
     .fail(function(err){
         console.log("  *** Problem logging in to GMA server");
+        console.log("  - username:"+username);
+        console.log("  - password:"+password);
         console.log(err);
         dfd.reject(err);
     })
@@ -584,4 +596,41 @@ var setupGMA = function( username, password ) {
     return dfd;
 };
 */
+
+
+
+
+//----------------------------------------------------------------------------
+// Upload Routines
+//----------------------------------------------------------------------------
+
+
+/**
+ * @function uploadGatherSteps
+ *
+ * Gather the Contact Steps being modified during this transaction
+ *
+ * when done: req.nssystem.gma.upload.stepsToDo = {
+ *    measurementID:[{ date: ContactSteps.step_date, obj:measurementObj}],
+ *    ...
+ * }
+ *
+ * @param object req
+ * @param object gma
+ * @return jQuery Deferred
+ */
+var uploadGatherSteps = TestMap.uploadGatherSteps = function(req, next) {
+
+    // get the transactionLog
+    var xLog = req.param('transactionLog');
+
+
+    // make a list of all ContactStep model transactions
+    // translate this into a list of all Steps
+    // foreach step find the measurement Obj with the step.measurement_id
+    // package these all together
+    // save in req.nssystem.gma.upload.stepsToDo
+
+next();
+};
 
