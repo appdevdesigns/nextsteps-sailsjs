@@ -80,8 +80,7 @@ var updateCampus = function(opts) {
     var req = opts.req;
     var campus = opts.campus;
     var name = opts.name;
-//console.log('updateCampus() before findOne()');
-//console.log(campus);
+
 
     NSServerCampusTrans.findOne({
         campus_id: campus.id,
@@ -104,10 +103,9 @@ var updateCampus = function(opts) {
                 }
             });
         } else if (trans) {
-//console.log(' else if (trans) :');
             dfd.resolve();
         } else {
-            var err = new Error("Data error:  Translation Entry not found");
+            var err = new Error("Data error: Campus Translation Entry not found. id["+campus.id+']');
             dfd.reject(err);
         }
     });
