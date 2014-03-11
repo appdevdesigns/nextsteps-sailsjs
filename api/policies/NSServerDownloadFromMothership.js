@@ -431,13 +431,17 @@ var updateStep = function(opts) {
         dfd.reject(err);
     })
     .then(function(trans){
+
+        // NOTE: our step_description field is varchar(255), but measurementDescription
+        //       can be > 255, so only compare on substr(0,255)
         if (trans
             && (   (trans.step_label != measurement.measurementName)
-                || (trans.step_description != measurement.measurementDescription)) ){
+                || (trans.step_description != measurement.measurementDescription.substr(0,255))) ){
 
             console.log('    - updating step/measurement m_id:'+measurement.measurementId);
             console.log('       - name:'+measurement.measurementName);
             console.log('       - description:'+measurement.measurementDescription);
+            console.log('       - length(desc):'+ measurement.measurementDescription.length);
 
             trans.step_label = measurement.measurementName;
             trans.step_description = measurement.measurementDescription;
