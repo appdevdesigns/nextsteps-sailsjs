@@ -45,6 +45,7 @@ module.exports.policies = {
     ping: [],
     auth: [],
     sync:[ 'isAuthenticatedService',
+           'NSServerDevelopTools',
            'NSServerValidateUser',
            'NSServerDownloadFromMothership',
            'NSServerPrepareOutgoingData',
