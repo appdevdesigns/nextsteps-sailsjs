@@ -179,46 +179,50 @@ module.exports = function(req, res, next) {
     }
 
 
-    var uuid = null;
+//    var uuid = null;
     NSServerUser.findOne({user_guid:userGuid})
     .done(function(err, userObj){
 
         if (err) {
             // exit policy chain w/o calling next();
-            ADCore.comm.error(res, 'Failed to validate user during sync, ' + err);
+            ADCore.comm.error(res, err);
         }
 
         else if (userObj) {
 
-            var text = 'Found existing user, uuid = ' + userObj.user_uuid + '  guid='+userObj.user_guid;
+            var text = '  - Found existing user, uuid = ' + userObj.user_uuid + '  guid='+userObj.user_guid;
             endValidation({
                     logMsg:text,
                     req:req,
                     userObj:userObj,
                     res:res
                 },
-                next);
+                next
+            );
 
         }
 
         else { // User doesn't exist in model, create new user
-            console.log('creating new user for guid = ' + userGuid);
+            console.log('  - CREATING new user for guid = ' + userGuid);
             var newUUID = ADCore.util.createUUID();
             NSServerUser.create({user_uuid:newUUID, user_guid:userGuid, default_lang:userLang})
             .done(function(err, userObj){
                 if (err) {
                     // exit policy chain w/o calling next();
-                    ADCore.comm.error(res, 'Failed to create user during sync: ' + err);
+                    var newErr = new Error('Failed to create user during sync');
+                    newErr.systemErr = err;
+                    ADCore.comm.error(res, newErr);
                 } else {
 
-                    var text = 'Created new user record for GUID = ' + userGuid;
+                    var text = '    Created new user record for GUID = ' + userGuid;
                     endValidation({
                             logMsg:text,
                             req:req,
                             userObj:userObj,
                             res:res
                         },
-                        next);
+                        next
+                    );
 
                 }
             });
