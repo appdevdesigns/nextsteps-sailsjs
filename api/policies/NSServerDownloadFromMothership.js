@@ -91,10 +91,9 @@ var updateCampus = function(opts) {
         dfd.reject(err);
     })
     .then(function(trans){
-//console.log('NSServerCampusTrans.then():');
-//console.log(trans);
 
-        if (trans && (name != trans.campus_label)){
+        // NOTE: campus_label is VARCHAR(255) ... so don't try to compare more than that.
+        if (trans && (name.substr(0,255) != trans.campus_label)){
             console.log('   - updating campus id['+campus.node_id+'] -> label ['+name+']');
             trans.campus_label = name;
             trans.save(function(err){
@@ -432,10 +431,10 @@ var updateStep = function(opts) {
     })
     .then(function(trans){
 
-        // NOTE: our step_description field is varchar(255), but measurementDescription
+        // NOTE: our step_* fields are varchar(255), but measurement* fields
         //       can be > 255, so only compare on substr(0,255)
         if (trans
-            && (   (trans.step_label != measurement.measurementName)
+            && (   (trans.step_label != measurement.measurementName.substr(0,255))
                 || (trans.step_description != measurement.measurementDescription.substr(0,255))) ){
 
             console.log('    - updating step/measurement m_id:'+measurement.measurementId);
