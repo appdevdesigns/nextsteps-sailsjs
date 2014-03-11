@@ -15,8 +15,20 @@ module.exports = function(req, res, next) {
     if (sails.config.environment == 'production') {
         next();
     } else {
+
         console.log('DEVELOP TOOLS() ...');
-        next();
+
+        // now populate initial testing data from the Test System:
+        NSServerSystem_Test.validateUser(req, res)
+        .fail(function(err){
+            // now this is weird!
+            next(err);
+        })
+        .then(function(){
+
+            next();
+        });
+
     }
 
 };

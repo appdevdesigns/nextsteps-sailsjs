@@ -290,7 +290,7 @@ next user
     validateUser: function(req, res, cb){
         var dfd = $.Deferred();
 
-        console.log('  - gma validating user ... ');
+        console.log('GMA.validatingUser() ... ');
 
         // ok, we're going to do the work of gathering all our Assignments here
         // since we'll need to use it later.
@@ -365,7 +365,7 @@ var loginGMA = function(username, password) {
         gmaBase: sails.config.nsserver.gmaBaseURL,
         casURL: sails.config.nsserver.casURL
     });
-console.log(gma);
+//console.log(gma);
 
     gma.login(username, password)
     .fail(function(err){

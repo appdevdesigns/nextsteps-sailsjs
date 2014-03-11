@@ -120,12 +120,15 @@ module.exports = {
 
             // this is our testing Stub, so load in our
             // expected incoming data:
-            var testData = Tests.defaultClientData;
+            var testData = {};
             var test = req.param('test');
 
             // allow to specify a different set on the querystring
+            // NOTE: .parse( .stringify() )  is a method to clone an object.
             if (Tests[test]) {
-                testData = Tests[test];
+                testData = JSON.parse(JSON.stringify(Tests[test]));
+            } else {
+                testData = JSON.parse(JSON.stringify(Tests.defaultClientData));
             }
 
             // if any of the data is provided in the req, keep it:
@@ -136,10 +139,47 @@ module.exports = {
                 }
             }
 
-            // now load up our test data:
-            for( var key in testClientData) {
-                req.body[key] = testClientData[key];
-            }
+
+            // Lets try to make the data seem more intelligent
+            // match the campus_uuids & step_uuids with values from the DB:
+            campusMatchUp(testData)
+            .fail(function(err){
+                dfd.reject(err);
+            })
+            .then(function(){
+
+                // now matchup the step uuid's
+                stepMatchUp(testData)
+                .fail(function(err){
+                    dfd.reject(err);
+                })
+                .then(function(){
+
+                    // make sure lastSyncTimestamp is a valid value
+                    if (testData.lastSyncTimestamp == '') {
+                        testData.lastSyncTimestamp = Date.now() - 1000;
+                    }
+
+                    // make sure our dates make sense
+                    dateMatchUp(testData);
+
+console.log('*** testData ***');
+console.log(testData.transactionLog);
+console.log();
+console.log();
+
+                    // now load up our test data:
+                    for( var key in testData) {
+                        req.body[key] = testData[key];
+                    }
+
+                    dfd.resolve();
+
+                });
+            });
+
+
+
             return dfd;
         }
 };
@@ -147,6 +187,11 @@ module.exports = {
 
 
 var Tests = {
+    // basic client submission
+    // 3 new contacts
+    // 1 update contact
+    // 1 delete contact
+    // 3 new Steps
     defaultClientData : {
         'username' : 'jon@vellacott.co.uk',
         'password' : 'manila',
@@ -227,8 +272,181 @@ var Tests = {
                    'contact_email'     : 'jason.smith@gmail.com',
                    'contact_notes'     : ''
                }
+           },
+           {
+               'operation': 'create',
+               'model': 'ContactStep',
+               'params': {
+                   'contact_uuid'      : '234567890abcdefxx',
+                   'step_uuid'         : 'step1',
+                   'step_date'         : 'date1'
+               }
+           },
+           {
+               'operation': 'create',
+               'model': 'ContactStep',
+               'params': {
+                   'contact_uuid'      : '234567890abcdefxx',
+                   'step_uuid'         : 'step2',
+                   'step_date'         : 'date1'
+               }
+           },
+           {
+               'operation': 'create',
+               'model': 'ContactStep',
+               'params': {
+                   'contact_uuid'      : '234567890abcdefxx',
+                   'step_uuid'         : 'step3',
+                   'step_date'         : 'date1'
+               }
            }
            ]
     }
-}
+};
 
+
+
+var campusMatchUp = function( testData ) {
+    var dfd = $.Deferred();
+
+    NSServerCampus.find()
+    .fail(function(err){
+        dfd.reject(err);
+    })
+    .then(function(list){
+
+        var map = {
+                mycampusuuid:'mycampusuuid',
+                anothercampusuuid:'anothercampusuuid'
+        };
+
+        // now take the campus_uuid's from the first several campuses in
+        // our list of campuses:
+        var indx = 0;
+        for (var key in map) {
+            if (list.length > indx) {
+                map[key] = list[indx].campus_uuid;
+            }
+            indx++;
+        }
+
+        // now traverse all the log entries and update the uuid's
+        var log = testData.transactionLog;
+        log.forEach(function(entry){
+           if (entry.params.campus_uuid) {
+               entry.params.campus_uuid = map[entry.params.campus_uuid];
+           }
+        });
+
+        dfd.resolve();
+
+    });
+
+    return dfd;
+};
+
+
+
+var dateMatchUp = function( testData ) {
+
+    // possible date fields:
+    var map = {
+            step_date:'step_date'
+    };
+
+    // for each possible date field make a new date
+    var offset = 0;
+    for (var k in map) {
+
+        // make  log dates make sense:
+        var date = '';              // our string placeholder:
+        var dateNow = new Date();   // actual date of right now
+        // desired format:  YYYYMMDD
+        date += dateNow.getFullYear(); // now have YYYY
+
+        var month = dateNow.getMonth() +1;
+        if (month < 10) month = "0"+month;
+        date += month;                  // now have YYYYMM
+
+        var days = dateNow.getDate() + offset;
+        if (days > 28) days = days - 28; // clamp to 28 max
+        if (days < 10) days = '0'+days;  // make sure we have 2 digits
+        date += days;                    // now have YYYMMDD
+
+        map[k] = date;
+        offset++;
+    }
+
+    // now traverse all the log entries and update the dates
+    var log = testData.transactionLog;
+    log.forEach(function(entry){
+
+        // for each possible Date field:
+        for (var m in map) {
+
+            if (entry.params[m]) {
+                entry.params[m] = map[m];
+            }
+
+        }
+
+    });
+
+
+};
+
+
+
+var stepMatchUp = function (testData) {
+    var dfd = $.Deferred();
+
+    // first pull from a list of steps associated with the first
+    // campus we have in our transaction Log
+    var campusUUID = '';
+    testData.transactionLog.forEach(function(log){
+
+        if (campusUUID == '') {
+            if (log.params.campus_uuid) {
+                campusUUID = log.params.campus_uuid;
+            }
+        }
+    });
+
+    console.log('   (test data: finding steps for campus_uuid:'+campusUUID);
+
+    NSServerSteps.find({ campus_uuid:campusUUID})
+    .fail(function(err){
+        dfd.reject(err);
+    })
+    .then(function(list){
+
+        var map = {
+                step1:'step1',
+                step2:'step2',
+                step3:'step3'
+        };
+
+        // now take the step_uuid's from the first several steps in
+        // our list of steps:
+        var indx = 0;
+        for (var key in map) {
+            if (list.length > indx) {
+                map[key] = list[indx].step_uuid;
+            }
+            indx++;
+        }
+
+        // now traverse all the log entries and update the uuid's
+        var log = testData.transactionLog;
+        log.forEach(function(entry){
+           if (entry.params.step_uuid) {
+               entry.params.step_uuid = map[entry.params.step_uuid];
+           }
+        });
+
+        dfd.resolve();
+
+    });
+
+    return dfd;
+};
