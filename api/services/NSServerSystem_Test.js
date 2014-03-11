@@ -157,7 +157,28 @@ module.exports = {
 
                     // make sure lastSyncTimestamp is a valid value
                     if (testData.lastSyncTimestamp == '') {
-                        testData.lastSyncTimestamp = Date.now() - 1000;
+
+                        // let's use yesterday:
+
+                        var dateNow = new Date();   // actual date of right now
+
+                        var year = dateNow.getFullYear(); // now have YYYY
+
+                        var month = dateNow.getMonth() +1;
+
+                        var days = dateNow.getDate() - 1;
+                        if (days < 1) {
+                            days = 28;  // just to be sure
+                            month = month -1;
+                            if (month == 0) {
+                                month = 12;
+                                year --;
+                            }
+                        }
+
+                        var newDate = month+"/"+days+"/"+year;
+
+                        testData.lastSyncTimestamp = new Date(newDate).getTime();
                     }
 
                     // make sure our dates make sense
@@ -384,6 +405,7 @@ var dateMatchUp = function( testData ) {
         // for each possible Date field:
         for (var m in map) {
 
+            // if that field exists, update it's value with the map value.
             if (entry.params[m]) {
                 entry.params[m] = map[m];
             }
@@ -412,7 +434,7 @@ var stepMatchUp = function (testData) {
         }
     });
 
-    console.log('   (test data: finding steps for campus_uuid:'+campusUUID);
+//    console.log('   (test data: finding steps for campus_uuid:'+campusUUID);
 
     NSServerSteps.find({ campus_uuid:campusUUID})
     .fail(function(err){
