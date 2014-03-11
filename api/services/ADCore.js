@@ -193,6 +193,10 @@ module.exports = {
          */
         current: function (req) {
 //            return req.session.appdev.user;
+if (typeof req == 'undefined') {
+    var err = new Error('oops!  cant call ADCore.user.current() without a req param!');
+    console.log(err);
+}
 
 //// TODO: implement the authentication so we can have a user object.
             return {
